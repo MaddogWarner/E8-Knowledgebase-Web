@@ -1,0 +1,14 @@
+node_modules/
+dist/
+certs/
+.env
+.DS_Store
+coverage/
+playwright-report/
+test-results/
+
+# Internal working docs (kept local, not part of the public repo)
+CLAUDE.md
+codex-plan.md
+AGENTS.md
+

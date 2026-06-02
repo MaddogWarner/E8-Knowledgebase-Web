@@ -1,0 +1,15 @@
+node_modules
+services/web/node_modules
+services/web/dist
+certs
+.git
+.github
+.env
+coverage
+playwright-report
+test-results
+.DS_Store
+screenshots
+scripts
+*.md
+

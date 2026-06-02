@@ -1,0 +1,33 @@
+# Changelog
+
+All notable changes to this project are documented here. The format is based on
+[Keep a Changelog](https://keepachangelog.com/), and this project adheres to
+[Semantic Versioning](https://semver.org/).
+
+## 1.0.0 — 2026-06-02
+
+Initial public release — a self-hostable web version of the Essential 8 Knowledge
+Base iOS app by MadDogWarner.
+
+### Added
+
+- React 19 + TypeScript + Vite single-page app with a desktop-first sidebar layout (responsive down to mobile).
+- All eight Essential Eight controls, each with an ML0 baseline and ML1/ML2/ML3 maturity levels: summaries, numbered implementation steps, and copy-able Group Policy / registry / PowerShell / command blocks, ported verbatim from the iOS Swift source.
+- "Beyond Windows built-in tooling" gap notes per maturity level.
+- Microsoft 365 Additional Controls: selectable licensing mode (None / E3 + Entra ID P1 / E3 + Entra ID P2 / E5) that layers in the matching Microsoft 365 / Microsoft Defender additions; the selection is stored locally.
+- Global search across controls, steps and technical details; deep-link URLs per control and maturity level; print / Save-as-PDF stylesheet; light/dark theme toggle.
+- About & Privacy page with the canonical no-data-collection statement and authoritative reference links (ASD, Microsoft Learn).
+- Single hardened Docker container: multi-stage build, nginx serving the static SPA with HTTP→HTTPS redirect, auto-generated self-signed certificate (with custom-certificate override), HSTS / CSP / `X-Content-Type-Options` / `Referrer-Policy` headers, and rate limiting.
+- GitHub Actions workflow to build and publish the container image to GitHub Container Registry (GHCR).
+- Vitest unit tests (data integrity, Microsoft 365 cumulative logic, privacy copy) and Playwright end-to-end tests (navigation, maturity tabs, deep links, search, copy, dark mode, Microsoft 365 additions, About).
+- `scripts/generate-data.mjs` to regenerate the TypeScript data modules from the iOS Swift source, and `services/web/scripts/capture-screenshots.mjs` to regenerate the README screenshots.
+
+### Security & privacy
+
+- No backend, database, authentication, accounts, analytics or telemetry; the app makes no external network calls and stores only the theme and Microsoft 365 licensing-mode preferences in the browser.
+
+## Credits
+
+- **MadDogWarner** — creator and maintainer; author of the original iOS app.
+- **Claude** (Anthropic) — plan, architecture, content-parity and security review.
+- **Codex** — implementation of the SPA, Docker / nginx packaging, data port and tests.
