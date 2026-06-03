@@ -23,6 +23,11 @@ The optional **M365 Additional Controls** page lets you select a Microsoft 365
 licensing mode so maturity-level pages show separate Microsoft 365 / Microsoft
 Defender additions without mixing them into the built-in Windows guidance.
 
+The web app can also act as a lightweight implementation tracker. Manual step
+ticks are stored only in the browser, and CSV evidence from the
+`e8-hardening-audit-policy-compliance-checker` is held in memory for the current
+session only.
+
 ## Scope
 
 - Covers the **November 2023** release of the ASD Essential Eight Maturity Model.
@@ -47,13 +52,23 @@ Each control also surfaces an **ML0** baseline ("no controls implemented").
 - **Deep-link URLs** per control and maturity level (e.g. `/control/3/ml2`) for bookmarking and sharing.
 - **Print / Save as PDF** for clean runbook output.
 - **Dark mode** toggle (remembered locally).
+- Per-step implementation ticks with per-mitigation progress bars.
+- Client-side CSV evidence upload for the E8 hardening audit and policy
+  compliance checker. Only cleanly mapped E8 rows are used; MDE and audit-policy
+  rows are ignored, and host/user/IP/raw CSV data is not persisted.
+- Home-page target maturity selector with an option to hide mitigations already
+  complete for the selected target.
 - No accounts, no analytics, no data collection — entirely client-side and offline.
 
 ## Screenshots
 
-| Home overview | Control detail (with M365 additions) |
+| Home — overview, progress & CSV evidence upload | Control detail — progress bar, step ticks & type chips |
 | --- | --- |
-| ![Home overview](screenshots/01-home.png) | ![Application Control with Microsoft 365 E5 additions](screenshots/03-maturity-with-m365-additions.png) |
+| ![Home overview with per-card progress, target-maturity selector and CSV evidence upload](screenshots/01-home.png) | ![Application Control ML1 with progress bar, step checkboxes and command / GPO / registry chips](screenshots/02-application-control-ml1.png) |
+
+| CSV audit evidence mapped to steps | Maturity level with Microsoft 365 additions |
+| --- | --- |
+| ![Restrict Administrative Privileges showing Evidence provided and Audit: non-compliant badges from an uploaded CSV](screenshots/08-evidence.png) | ![Application Control with Microsoft 365 E5 additions](screenshots/03-maturity-with-m365-additions.png) |
 
 | Global search | Microsoft 365 licensing modes |
 | --- | --- |
@@ -69,7 +84,9 @@ A single hardened container: a React + TypeScript + Vite SPA built and served by
 nginx, which terminates TLS, redirects HTTP→HTTPS, and sets a strict
 Content-Security-Policy and other security headers. There is **no backend and no
 database** — all content is static, and the only stored state (M365 licensing mode,
-theme) lives in the browser's `localStorage`.
+theme, target maturity, hide-complete preference and manual step ticks) lives in
+the browser's `localStorage`. CSV-derived evidence remains in memory only and
+clears on refresh.
 
 ```text
 [ browser ] ──HTTPS──▶ [ nginx (TLS + security headers) ] ──▶ static SPA (dist/)
@@ -155,8 +172,10 @@ BASE_URL=http://localhost:5173 node scripts/capture-screenshots.mjs
 ## Privacy
 
 This tool does not collect, record, store, transmit or share any user data, and
-makes no external network calls. The licensing-mode and theme preferences are kept
-only in your browser.
+makes no external network calls. The licensing-mode, theme, target maturity,
+hide-complete preference and manual implementation ticks are kept only in your
+browser. CSV audit evidence is parsed locally, mapped to the small set of KB
+steps it cleanly covers, and cleared when the page is refreshed.
 
 ## Contributors
 

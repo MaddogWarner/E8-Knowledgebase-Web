@@ -46,6 +46,10 @@ export const appInfo = {
   {
     "title": "Microsoft Entra MFA licensing",
     "url": "https://learn.microsoft.com/en-us/entra/identity/authentication/concept-mfa-licensing"
+  },
+  {
+    "title": "E8 hardening audit & policy compliance checker (GitHub)",
+    "url": "https://github.com/MaddogWarner/e8-hardening-audit-policy-compliance-checker"
   }
 ] satisfies ReferenceLink[]
 };

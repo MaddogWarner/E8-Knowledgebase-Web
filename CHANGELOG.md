@@ -4,6 +4,25 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 2.0.0 — 2026-06-03
+
+Implementation-tracking release: the reference now doubles as a lightweight,
+client-side progress tracker with optional CSV audit evidence.
+
+### Added
+
+- Per-step manual implementation ticks persisted in browser `localStorage`, plus per-mitigation segmented progress bars.
+- Client-side CSV evidence upload for `e8-hardening-audit-policy-compliance-checker`, with in-memory-only evidence state and an honest matched E8 checks summary.
+- Home-page target maturity selector and hide-completed-mitigations switch using the per-target completion rule.
+- Richer technical-detail presentation with recognised type chips while preserving verbatim code-block text and copy output.
+- About-page reference link to the audit tool GitHub repository.
+- Vitest coverage for CSV parsing, evidence mapping and status logic, plus Playwright coverage for progress, hide-complete, CSV evidence and the About link.
+
+### Fixed
+
+- Manual implementation ticks now toggle correctly under React StrictMode.
+- Playwright v2 coverage now uses the correct Control 1 step count and badge-scoped evidence assertions.
+
 ## 1.0.0 — 2026-06-02
 
 Initial public release — a self-hostable web version of the Essential 8 Knowledge
