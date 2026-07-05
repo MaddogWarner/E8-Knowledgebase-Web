@@ -28,7 +28,7 @@ export const controls: EssentialControl[] = [
             "ISM-1657"
           ],
           "technicalDetails": [
-            "Command: sc config AppIDSvc start= auto",
+            "Command: sc config AppIDSvc start= auto (Note: returns Access Denied on Windows 10 1809+, use GPO instead)",
             "GPO: Computer Configuration → Windows Settings → Security Settings → System Services → Application Identity = Automatic"
           ]
         },
@@ -56,8 +56,7 @@ export const controls: EssentialControl[] = [
           ],
           "technicalDetails": [
             "Deny path: %OSDRIVE%\\Users\\*",
-            "Deny path: %LOCALAPPDATA%\\Temp\\*",
-            "Deny path: %TEMP%\\*"
+            "Deny path: %OSDRIVE%\\Users\\*\\AppData\\Local\\Temp\\* (covers %TEMP% and %LOCALAPPDATA%\\Temp)"
           ]
         },
         {
@@ -294,7 +293,7 @@ export const controls: EssentialControl[] = [
           "technicalDetails": [
             "GPO: User Configuration → Administrative Templates → Microsoft <App> <Version> → <App> Options → Security → Trust Center → Block macros from running in Office files from the Internet = Enabled",
             "Registry: HKCU\\Software\\Policies\\Microsoft\\Office\\16.0\\<app>\\Security → blockcontentexecutionfrominternet = 1 (DWORD)",
-            "Apply for each of: word, excel, powerpoint, outlook, access, visio, project, publisher"
+            "Apply block policy for: word, excel, powerpoint, access, visio (Outlook, Project, and Publisher do not support this policy)"
           ]
         },
         {
@@ -427,13 +426,13 @@ export const controls: EssentialControl[] = [
           ],
           "technicalDetails": [
             "PowerShell: Get-Package -Name '*Java*' | Uninstall-Package",
-            "GPO: Microsoft Edge → Block third party cookies = Enabled (defence in depth)"
+            "GPO: Microsoft Edge → ExtensionInstallBlocklist = * (Block all extensions by default to prevent custom Java helpers)"
           ]
         },
         {
           "id": "4-ml1-3",
           "title": "Block web advertisements",
-          "description": "Use Edge's built-in tracking prevention at Strict, which also blocks the majority of ad networks.",
+          "description": "Use Edge's built-in tracking prevention at Strict, which also blocks many tracking-based ad networks.",
           "ismControls": [
             "ISM-1485",
             "ISM-1585"
@@ -444,7 +443,7 @@ export const controls: EssentialControl[] = [
           ]
         }
       ],
-      "gapNote": null
+      "gapNote": "Edge Tracking Prevention in Strict mode blocks many tracking networks, but does not provide complete ad-blocking compliance. An enterprise ad-blocking extension or DNS filter is required."
     },
     "ml2": {
       "summary": "Microsoft Office is prevented from creating child processes. PowerShell module and script-block logging enabled. Attack Surface Reduction rules deployed.",
@@ -949,7 +948,7 @@ export const controls: EssentialControl[] = [
             "ISM-1811"
           ],
           "technicalDetails": [
-            "Command: wbadmin enable backup -addtarget:\\\\backup\\server1 -include:C: -allCritical -schedule:23:00 -user:CORP\\backupsvc -password:<pwd>",
+            "Command: wbadmin enable backup -addtarget:\\\\backup\\server1 -include:C: -allCritical -schedule:23:00 -user:CORP\\backupsvc -password:<pwd> (Caution: entering passwords in plaintext via CLI logs them to history)",
             "Task Scheduler: schtasks /create /tn 'Daily Backup' /tr 'wbadmin start backup -backupTarget:E: -include:C: -allCritical -quiet' /sc daily /st 23:00 /ru SYSTEM"
           ]
         },
