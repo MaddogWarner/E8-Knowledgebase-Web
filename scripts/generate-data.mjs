@@ -16,10 +16,15 @@ if (!swiftRootInput) {
 }
 const swiftRoot = path.resolve(swiftRootInput);
 const out = (targetPath) => path.join(root, 'services/web/src', targetPath);
+const swiftFileRoot = await fs.access(path.join(swiftRoot, 'EssentialControlsData.swift')).then(
+  () => swiftRoot,
+  () => path.join(swiftRoot, 'Essential 8 Knowledge Base')
+);
 
-const controlsSwift = await fs.readFile(`${swiftRoot}/EssentialControlsData.swift`, 'utf8');
-const m365Swift = await fs.readFile(`${swiftRoot}/Microsoft365AdditionalControlsData.swift`, 'utf8');
-const appSwift = await fs.readFile(`${swiftRoot}/AppInformation.swift`, 'utf8');
+const controlsSwift = await fs.readFile(`${swiftFileRoot}/EssentialControlsData.swift`, 'utf8');
+const m365Swift = await fs.readFile(`${swiftFileRoot}/Microsoft365AdditionalControlsData.swift`, 'utf8');
+const appSwift = await fs.readFile(`${swiftFileRoot}/AppInformation.swift`, 'utf8');
+const auditPolicySwift = await fs.readFile(`${swiftFileRoot}/WindowsAuditPolicyData.swift`, 'utf8');
 
 function skipWs(source, index) {
   while (/\s/.test(source[index] ?? '')) index += 1;
@@ -27,6 +32,22 @@ function skipWs(source, index) {
 }
 
 function parseString(source, index) {
+  if (source.startsWith('"""', index)) {
+    let cursor = index + 3;
+    let value = '';
+    while (cursor < source.length) {
+      if (source.startsWith('"""', cursor)) {
+        const lines = value.replace(/^\n/, '').replace(/\n\s*$/, '').split('\n');
+        const indents = lines.filter((line) => line.trim()).map((line) => line.match(/^\s*/)?.[0].length ?? 0);
+        const indent = indents.length > 0 ? Math.min(...indents) : 0;
+        return [lines.map((line) => line.slice(Math.min(indent, line.length))).join('\n'), cursor + 3];
+      }
+      value += source[cursor];
+      cursor += 1;
+    }
+    throw new Error('Unterminated Swift multiline string');
+  }
+
   let cursor = index + 1;
   let value = '';
 
@@ -123,6 +144,8 @@ function parseValue(source, index) {
     return [Number(source.slice(cursor, next)), next];
   }
   if (source.startsWith('nil', cursor)) return [null, cursor + 3];
+  if (source.startsWith('true', cursor)) return [true, cursor + 4];
+  if (source.startsWith('false', cursor)) return [false, cursor + 5];
   return parseCall(source, cursor);
 }
 
@@ -162,6 +185,7 @@ function stepFromCall(call, controlId, level, index) {
     id: `${controlId}-${level}-${index + 1}`,
     title: call.args.title,
     description: call.args.description,
+    ismControls: call.args.ismControls ?? [],
     technicalDetails: call.args.technicalDetails
   };
 }
@@ -217,6 +241,40 @@ const ml0GenericDescription = controlsSwift.match(/static let ml0GenericDescript
 await fs.writeFile(
   out('data/controls.ts'),
   `import type { EssentialControl, MaturityLevel } from '../types';\n\nexport const ml0GenericDescription = ${JSON.stringify(ml0GenericDescription)};\n\nexport const maturityLevels: Array<{ id: MaturityLevel; shortName: string; displayName: string }> = [\n  { id: 'ml1', shortName: 'ML1', displayName: 'Maturity Level 1' },\n  { id: 'ml2', shortName: 'ML2', displayName: 'Maturity Level 2' },\n  { id: 'ml3', shortName: 'ML3', displayName: 'Maturity Level 3' }\n];\n\nexport const controls: EssentialControl[] = ${JSON.stringify(controls, null, 2)};\n\nexport function getControl(controlId: number): EssentialControl | undefined {\n  return controls.find((control) => control.id === controlId);\n}\n\nexport function getLevelContent(control: EssentialControl, level: MaturityLevel) {\n  return control[level];\n}\n`
+);
+
+function parseSwiftArrayConst(source, marker) {
+  const start = source.indexOf(marker);
+  if (start < 0) throw new Error(`Missing ${marker}`);
+  const equals = source.indexOf('=', start);
+  const arrayStart = source.indexOf('[', equals);
+  const [items] = parseArray(source, arrayStart);
+  return items;
+}
+
+const recommendationMap = {
+  '.success': 'Success',
+  '.failure': 'Failure',
+  '.both': 'Success & Failure',
+  '.notRecommended': 'Not Recommended'
+};
+
+const auditPolicyOverview = auditPolicySwift.match(/static let overview = ([\s\S]*?)\n\n    static let entries/)?.[1];
+if (!auditPolicyOverview) throw new Error('Missing audit policy overview');
+const [auditPolicyOverviewValue] = parseValue(auditPolicySwift, auditPolicySwift.indexOf(auditPolicyOverview));
+const auditPolicyEntries = parseSwiftArrayConst(auditPolicySwift, 'static let entries').map((entry) => ({
+  id: entry.args.id,
+  category: entry.args.category,
+  name: entry.args.name,
+  description: entry.args.description,
+  recommendation: recommendationMap[entry.args.recommendation.name],
+  considerations: entry.args.considerations,
+  domainControllerOnly: entry.args.domainControllerOnly
+}));
+
+await fs.writeFile(
+  out('data/auditPolicy.ts'),
+  `export type AuditRecommendation = 'Success' | 'Failure' | 'Success & Failure' | 'Not Recommended';\n\nexport interface AuditPolicyEntry {\n  id: string;\n  category: string;\n  name: string;\n  description: string;\n  recommendation: AuditRecommendation;\n  considerations: string;\n  domainControllerOnly: boolean;\n}\n\nexport const auditPolicyOverview = ${JSON.stringify(auditPolicyOverviewValue)};\n\nexport const auditPolicyEntries: AuditPolicyEntry[] = ${JSON.stringify(auditPolicyEntries, null, 2)};\n`
 );
 
 function parseProtectionArrays(swift, functionName) {
@@ -305,10 +363,17 @@ function parseLinks(arrayName) {
 }
 
 const privacyLink = appSwift.match(/static let privacyPolicyLink = ReferenceLink\(\s*\n\s*title: "([^"]+)",\s*\n\s*url: referenceURL\("([^"]+)"\)/);
+const referenceLinks = [
+  ...parseLinks('referenceLinks'),
+  {
+    title: 'E8 hardening audit & policy compliance checker (GitHub)',
+    url: 'https://github.com/MaddogWarner/e8-hardening-audit-policy-compliance-checker'
+  }
+];
 
 await fs.writeFile(
   out('data/appInfo.ts'),
-  `import type { ReferenceLink } from '../types';\n\nexport const appInfo = {\n  aboutTitle: ${JSON.stringify(swiftConst('aboutTitle'))},\n  aboutDescription: ${JSON.stringify(swiftConst('aboutDescription'))},\n  contentScope: ${JSON.stringify(swiftConst('contentScope'))},\n  aboutMeTitle: ${JSON.stringify(swiftConst('aboutMeTitle'))},\n  aboutMeDescription: ${JSON.stringify(swiftConst('aboutMeDescription'))},\n  authorLinks: ${JSON.stringify(parseLinks('authorLinks'), null, 2)} satisfies ReferenceLink[],\n  privacyTitle: ${JSON.stringify(swiftConst('privacyTitle'))},\n  privacyPolicy: ${JSON.stringify(swiftConst('privacyPolicy'))},\n  privacyPolicyLink: ${JSON.stringify({ title: privacyLink[1], url: privacyLink[2] }, null, 2)} satisfies ReferenceLink,\n  referenceLinks: ${JSON.stringify(parseLinks('referenceLinks'), null, 2)} satisfies ReferenceLink[]\n};\n`
+  `import type { ReferenceLink } from '../types';\n\nexport const appInfo = {\n  aboutTitle: ${JSON.stringify(swiftConst('aboutTitle'))},\n  aboutDescription: ${JSON.stringify(swiftConst('aboutDescription'))},\n  contentScope: ${JSON.stringify(swiftConst('contentScope'))},\n  aboutMeTitle: ${JSON.stringify(swiftConst('aboutMeTitle'))},\n  aboutMeDescription: ${JSON.stringify(swiftConst('aboutMeDescription'))},\n  authorLinks: ${JSON.stringify(parseLinks('authorLinks'), null, 2)} satisfies ReferenceLink[],\n  privacyTitle: ${JSON.stringify(swiftConst('privacyTitle'))},\n  privacyPolicy: ${JSON.stringify(swiftConst('privacyPolicy'))},\n  privacyPolicyLink: ${JSON.stringify({ title: privacyLink[1], url: privacyLink[2] }, null, 2)} satisfies ReferenceLink,\n  referenceLinks: ${JSON.stringify(referenceLinks, null, 2)} satisfies ReferenceLink[]\n};\n`
 );
 
 console.log(`Generated ${controls.length} controls`);

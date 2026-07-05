@@ -1,21 +1,28 @@
 import { describe, expect, it } from 'vitest';
 import { controls } from '../data/controls';
-import { classifyStep, controlComplete, isStepDone, levelsUpTo } from '../lib/status';
+import { classifyStep, compliancePercentage, controlComplete, isStepDone, levelsUpTo } from '../lib/status';
+import type { StepStatus } from '../types';
+
+const implemented: StepStatus = { state: 'implemented' };
+const notApplicable: StepStatus = { state: 'notApplicable', reason: 'Covered by compensating control' };
+const notImplemented: StepStatus = { state: 'notImplemented' };
 
 describe('status helpers', () => {
-  it('classifies step state with evidence precedence', () => {
-    expect(classifyStep(true, 'pass')).toBe('evidenced');
-    expect(classifyStep(true, 'fail')).toBe('failed');
-    expect(classifyStep(false, 'fail')).toBe('failed');
-    expect(classifyStep(true, undefined)).toBe('self');
-    expect(classifyStep(false, undefined)).toBe('remaining');
+  it('classifies step state with N/A and evidence precedence', () => {
+    expect(classifyStep(notApplicable, 'pass')).toBe('notApplicable');
+    expect(classifyStep(implemented, 'pass')).toBe('evidenced');
+    expect(classifyStep(implemented, 'fail')).toBe('failed');
+    expect(classifyStep(notImplemented, 'fail')).toBe('failed');
+    expect(classifyStep(implemented, undefined)).toBe('implemented');
+    expect(classifyStep(notImplemented, undefined)).toBe('remaining');
   });
 
-  it('treats evidenced and self-attested steps as done', () => {
-    expect(isStepDone(false, 'pass')).toBe(true);
-    expect(isStepDone(true, undefined)).toBe(true);
-    expect(isStepDone(true, 'fail')).toBe(false);
-    expect(isStepDone(false, undefined)).toBe(false);
+  it('treats evidenced and implemented steps as done', () => {
+    expect(isStepDone(notImplemented, 'pass')).toBe(true);
+    expect(isStepDone(implemented, undefined)).toBe(true);
+    expect(isStepDone(implemented, 'fail')).toBe(false);
+    expect(isStepDone(notApplicable, 'pass')).toBe(false);
+    expect(isStepDone(notImplemented, undefined)).toBe(false);
   });
 
   it('returns maturity levels up to the selected target', () => {
@@ -24,14 +31,27 @@ describe('status helpers', () => {
     expect(levelsUpTo('ml3')).toEqual(['ml1', 'ml2', 'ml3']);
   });
 
-  it('checks control completion relative to target maturity', () => {
+  it('calculates compliance with N/A excluded from the denominator', () => {
+    const steps = controls[0].ml1.steps;
+    const statuses: Record<string, StepStatus> = {
+      [steps[0].id]: implemented,
+      [steps[1].id]: notApplicable,
+      [steps[2].id]: notImplemented,
+      [steps[3].id]: notImplemented
+    };
+
+    expect(compliancePercentage(steps, (stepId) => statuses[stepId] ?? notImplemented, {})).toBe(33);
+    expect(compliancePercentage(steps.slice(0, 1), () => notApplicable, {})).toBe(100);
+  });
+
+  it('checks control completion relative to target maturity and accepts N/A', () => {
     const control = controls[0];
     const ml1StepIds = control.ml1.steps.map((step) => step.id);
-    const allStepIds = new Set(ml1StepIds);
+    const statuses = Object.fromEntries(ml1StepIds.map((stepId) => [stepId, implemented])) as Record<string, StepStatus>;
 
-    expect(controlComplete(control, 'ml1', (stepId) => allStepIds.has(stepId), {})).toBe(true);
-    expect(controlComplete(control, 'ml2', (stepId) => allStepIds.has(stepId), {})).toBe(false);
-    expect(controlComplete(control, 'ml1', (stepId) => allStepIds.has(stepId), { [ml1StepIds[0]]: 'fail' })).toBe(false);
-    expect(controlComplete(control, 'ml1', () => false, Object.fromEntries(ml1StepIds.map((stepId) => [stepId, 'pass'])))).toBe(true);
+    expect(controlComplete(control, 'ml1', (stepId) => statuses[stepId] ?? notImplemented, {})).toBe(true);
+    expect(controlComplete(control, 'ml2', (stepId) => statuses[stepId] ?? notImplemented, {})).toBe(false);
+    expect(controlComplete(control, 'ml1', (stepId) => statuses[stepId] ?? notImplemented, { [ml1StepIds[0]]: 'fail' })).toBe(false);
+    expect(controlComplete(control, 'ml1', () => notApplicable, {})).toBe(true);
   });
 });

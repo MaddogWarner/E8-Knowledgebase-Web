@@ -4,6 +4,27 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 3.0.0 — 2026-07-05
+
+iOS parity and desktop reporting release.
+
+### Added
+
+- Multi-state per-step tracking: Not Implemented, Implemented and Not Applicable with an optional local reason.
+- Compliance dashboard on the home page with an overall SVG ring, per-mitigation stacked bars and target-scoped completion maths.
+- ISM control capsules on implementation steps, generated from the iOS source, with ISM ID search support.
+- Windows Audit Policy reference page generated from the iOS source and available in global search.
+- Compliance report export as CSV plus printable home-page report output.
+- Environment profiles with isolated tracking, target maturity, hide-completed and M365 licence preferences.
+- Reset actions for the active profile or all app data, retaining the local theme preference.
+- Verification-command rendering support via an intentionally empty web-only `verification.ts` data file for later reviewed content.
+
+### Changed
+
+- Legacy boolean ticks migrate to Implemented status under the new profile-scoped storage model.
+- Evidence continues to count as Implemented, while manual Not Applicable takes precedence and audit failures still block manual implementation.
+- Progress bars now include Not Applicable as an amber segment and exclude N/A steps from denominators.
+
 ## 2.0.0 — 2026-06-03
 
 Implementation-tracking release: the reference now doubles as a lightweight,

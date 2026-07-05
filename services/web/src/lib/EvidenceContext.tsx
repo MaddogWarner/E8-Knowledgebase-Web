@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components */
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { deriveEvidence, type EvidenceSummary } from './evidence';
 import { parseCsv } from './csv';
+import { profileEvent } from './profiles';
 
 interface EvidenceContextValue {
   evidence: Record<string, 'pass' | 'fail'>;
@@ -14,6 +15,15 @@ const EvidenceContext = createContext<EvidenceContextValue | null>(null);
 
 export function EvidenceProvider({ children }: { children: ReactNode }) {
   const [summary, setSummary] = useState<EvidenceSummary | null>(null);
+
+  useEffect(() => {
+    function clearEvidence() {
+      setSummary(null);
+    }
+
+    window.addEventListener(profileEvent, clearEvidence);
+    return () => window.removeEventListener(profileEvent, clearEvidence);
+  }, []);
 
   const value = useMemo<EvidenceContextValue>(() => ({
     evidence: summary?.statuses ?? {},

@@ -51,24 +51,32 @@ test('manual ticks update progress and persist across reloads', async ({ page })
   await page.goto('/control/1/ml1');
   await expect(page.getByText('0 / 10 steps')).toBeVisible();
 
-  await page.getByLabel('Mark Enable the Application Identity service implemented').check();
-  await expect(page.locator('.status-badge.self')).toBeVisible();
-  await expect(page.getByText('1 / 10 steps')).toBeVisible();
+  await page.locator('[id="1-ml1-1"]').getByRole('radio', { name: 'Implemented', exact: true }).click();
+  await expect(page.locator('.status-badge.implemented')).toBeVisible();
+  await expect(page.getByText('1 / 10 steps · 10%')).toBeVisible();
 
   await page.reload();
-  await expect(page.getByLabel('Mark Enable the Application Identity service implemented')).toBeChecked();
-  await expect(page.getByText('1 / 10 steps')).toBeVisible();
+  await expect(page.locator('[id="1-ml1-1"]').getByRole('radio', { name: 'Implemented', exact: true })).toHaveAttribute('aria-checked', 'true');
+  await expect(page.getByText('1 / 10 steps · 10%')).toBeVisible();
+});
+
+test('N/A status with reason persists and is excluded from the denominator', async ({ page }) => {
+  await page.goto('/control/1/ml1');
+  await page.locator('[id="1-ml1-1"]').getByRole('radio', { name: 'N/A' }).click();
+  await page.getByLabel('N/A reason').fill('Server-only control excluded');
+  await page.getByLabel('N/A reason').press('Enter');
+
+  await expect(page.locator('[id="1-ml1-1"] .status-badge.notApplicable')).toBeVisible();
+  await expect(page.getByText('0 / 9 steps · 0%')).toBeVisible();
+
+  await page.reload();
+  await expect(page.getByText('Server-only control excluded')).toBeVisible();
 });
 
 test('home target maturity hide switch filters completed mitigations', async ({ page }) => {
   await page.goto('/control/1/ml1');
-  for (const label of [
-    'Mark Enable the Application Identity service implemented',
-    'Mark Create AppLocker default rules implemented',
-    'Mark Block execution from user-writable locations implemented',
-    'Mark Log block events implemented'
-  ]) {
-    await page.getByLabel(label).check();
+  for (const stepId of ['1-ml1-1', '1-ml1-2', '1-ml1-3', '1-ml1-4']) {
+    await page.locator(`[id="${stepId}"]`).getByRole('radio', { name: 'Implemented', exact: true }).click();
   }
 
   await page.goto('/');
@@ -96,6 +104,51 @@ test('CSV evidence upload marks mapped steps and clears on reload', async ({ pag
   await page.reload();
   await expect(page.locator('.status-badge.evidenced')).toHaveCount(0);
   await expect(page.locator('.status-badge.failed')).toHaveCount(0);
+});
+
+test('Windows Audit Policy page and search work', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /Windows Audit Policy/ }).click();
+  await expect(page.getByRole('heading', { name: 'Windows Audit Policy' })).toBeVisible();
+  await expect(page.getByText('Audit Account Lockout')).toBeVisible();
+
+  await page.getByRole('searchbox', { name: /Search controls/ }).fill('Audit Account Lockout');
+  await page.getByRole('button', { name: /Audit Account Lockout/ }).click();
+  await expect(page).toHaveURL(/\/audit-policy#account-lockout/);
+});
+
+test('CSV export downloads a compliance report', async ({ page }) => {
+  await page.goto('/');
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export CSV' }).click();
+  const download = await downloadPromise;
+  expect(download.suggestedFilename()).toMatch(/^e8kb-compliance-report-default-\d{4}-\d{2}-\d{2}\.csv$/);
+});
+
+test('profiles isolate progress', async ({ page }) => {
+  await page.goto('/control/1/ml1');
+  await page.locator('[id="1-ml1-1"]').getByRole('radio', { name: 'Implemented', exact: true }).click();
+
+  await page.getByRole('button', { name: /Profile Default/ }).click();
+  await page.getByLabel('New profile name').fill('Ward servers');
+  await page.getByRole('button', { name: 'Add' }).click();
+  await page.goto('/control/1/ml1');
+  await expect(page.locator('[id="1-ml1-1"]').getByRole('radio', { name: 'Not implemented' })).toHaveAttribute('aria-checked', 'true');
+
+  await page.getByRole('button', { name: /Profile Ward servers/ }).click();
+  await page.getByRole('button', { name: 'Default', exact: true }).click();
+  await page.goto('/control/1/ml1');
+  await expect(page.locator('[id="1-ml1-1"]').getByRole('radio', { name: 'Implemented', exact: true })).toHaveAttribute('aria-checked', 'true');
+});
+
+test('about reset flow clears active profile tracking', async ({ page }) => {
+  await page.goto('/control/1/ml1');
+  await page.locator('[id="1-ml1-1"]').getByRole('radio', { name: 'Implemented', exact: true }).click();
+  await page.getByRole('link', { name: /About & Privacy/ }).click();
+  await page.getByRole('button', { name: 'Reset this profile' }).click();
+  await page.getByRole('button', { name: 'Confirm reset' }).click();
+  await page.goto('/control/1/ml1');
+  await expect(page.locator('[id="1-ml1-1"]').getByRole('radio', { name: 'Not implemented' })).toHaveAttribute('aria-checked', 'true');
 });
 
 test('about page links to the audit tool repository', async ({ page }) => {

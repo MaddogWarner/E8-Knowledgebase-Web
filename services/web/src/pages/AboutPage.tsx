@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import { appInfo } from '../data/appInfo';
+import { useProfiles } from '../lib/profiles';
 import type { ReferenceLink } from '../types';
 
 function LinkList({ links }: { links: ReferenceLink[] }) {
@@ -16,6 +18,15 @@ function LinkList({ links }: { links: ReferenceLink[] }) {
 }
 
 export function AboutPage() {
+  const { activeProfile, resetActiveProfile, resetAllAppData } = useProfiles();
+  const [confirming, setConfirming] = useState<'profile' | 'all' | null>(null);
+
+  function confirmReset() {
+    if (confirming === 'profile') resetActiveProfile();
+    if (confirming === 'all') resetAllAppData();
+    setConfirming(null);
+  }
+
   return (
     <div className="page-stack narrow">
       <section className="page-heading">
@@ -36,6 +47,31 @@ export function AboutPage() {
         <LinkList links={[appInfo.privacyPolicyLink]} />
       </section>
 
+      <section className="content-section reset-section">
+        <h2>Reset app data</h2>
+        <p>
+          Clear implementation tracking, N/A reasons, Microsoft 365 licence mode, target maturity and hide-completed preferences. Theme preference is retained.
+        </p>
+        <div className="reset-actions">
+          <button type="button" className="print-button danger" onClick={() => setConfirming('profile')}>Reset this profile</button>
+          <button type="button" className="print-button danger" onClick={() => setConfirming('all')}>Delete all app data</button>
+        </div>
+        {confirming && (
+          <div className="reset-confirm" role="dialog" aria-modal="false" aria-labelledby="reset-title">
+            <h3 id="reset-title">{confirming === 'profile' ? `Reset ${activeProfile.name}?` : 'Delete all app data?'}</h3>
+            <p>
+              {confirming === 'profile'
+                ? 'This clears tracking data for the active profile only.'
+                : 'This clears every Essential 8 Knowledge Base profile and recreates a Default profile.'}
+            </p>
+            <div className="reset-actions">
+              <button type="button" className="print-button danger" onClick={confirmReset}>Confirm reset</button>
+              <button type="button" className="print-button" onClick={() => setConfirming(null)}>Cancel</button>
+            </div>
+          </div>
+        )}
+      </section>
+
       <section className="content-section">
         <h2>References</h2>
         <LinkList links={appInfo.referenceLinks} />
@@ -43,4 +79,3 @@ export function AboutPage() {
     </div>
   );
 }
-

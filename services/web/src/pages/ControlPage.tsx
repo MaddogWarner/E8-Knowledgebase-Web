@@ -11,10 +11,10 @@ import { useEvidence } from '../lib/EvidenceContext';
 import { resolveIcon } from '../lib/icons';
 import { isLicenseMode } from '../lib/license';
 import { isMaturityLevel } from '../lib/search';
-import { classifyStep, type StepState } from '../lib/status';
+import { isStepCompleteOrNotApplicable, isStepDone, statusCounts } from '../lib/status';
 import { useLocalStorage } from '../lib/useLocalStorage';
 import { useStepProgress } from '../lib/useStepProgress';
-import type { Microsoft365LicenseMode } from '../types';
+import type { MaturityLevel, Microsoft365LicenseMode } from '../types';
 
 export function ControlPage() {
   const { controlId, level } = useParams();
@@ -23,8 +23,9 @@ export function ControlPage() {
   const control = getControl(id);
   const activeLevel = isMaturityLevel(level) ? level : 'ml1';
   const [licenseMode] = useLocalStorage<Microsoft365LicenseMode>('e8kb.licenseMode', 'none', isLicenseMode);
+  const [targetMaturity] = useLocalStorage<MaturityLevel>('e8kb.targetMaturity', 'ml1', isMaturityLevel);
   const { evidence } = useEvidence();
-  const { isTicked } = useStepProgress();
+  const { status } = useStepProgress();
 
   useEffect(() => {
     if (location.hash) {
@@ -39,17 +40,11 @@ export function ControlPage() {
   const Icon = resolveIcon(control.icon);
   const content = getLevelContent(control, activeLevel);
   const allSteps = maturityLevels.flatMap(({ id: maturityLevel }) => getLevelContent(control, maturityLevel).steps);
-  const progressCounts = allSteps.reduce<Record<StepState, number>>(
-    (counts, step) => {
-      counts[classifyStep(isTicked(step.id), evidence[step.id])] += 1;
-      return counts;
-    },
-    { evidenced: 0, self: 0, failed: 0, remaining: 0 }
-  );
-  const levelDone = content.steps.filter((step) => {
-    const state = classifyStep(isTicked(step.id), evidence[step.id]);
-    return state === 'evidenced' || state === 'self';
-  }).length;
+  const progressCounts = statusCounts(allSteps, status, evidence);
+  const levelNotApplicable = content.steps.filter((step) => isStepCompleteOrNotApplicable(status(step.id), evidence[step.id]) && !isStepDone(status(step.id), evidence[step.id])).length;
+  const levelTotal = content.steps.length - levelNotApplicable;
+  const levelDone = content.steps.filter((step) => isStepDone(status(step.id), evidence[step.id])).length;
+  const beyondTarget = maturityLevels.findIndex((item) => item.id === activeLevel) > maturityLevels.findIndex((item) => item.id === targetMaturity);
 
   return (
     <div className="page-stack">
@@ -80,8 +75,11 @@ export function ControlPage() {
 
       <section className="level-section">
         <p className="eyebrow">What {activeLevel.toUpperCase()} requires</p>
-        <h2>{content.summary}</h2>
-        <p className="level-progress">{activeLevel.toUpperCase()} · {levelDone}/{content.steps.length} steps implemented</p>
+        <div className="level-title-row">
+          <h2>{content.summary}</h2>
+          {beyondTarget && <span className="beyond-chip">Beyond target</span>}
+        </div>
+        <p className="level-progress">{activeLevel.toUpperCase()} · {levelDone}/{levelTotal} steps implemented</p>
         <div className="steps-list">
           {content.steps.map((step, index) => (
             <StepCard key={step.id} step={step} index={index} />

@@ -1,3 +1,4 @@
+import { auditPolicyEntries } from '../data/auditPolicy';
 import { controls, getLevelContent, maturityLevels } from '../data/controls';
 import type { MaturityLevel } from '../types';
 
@@ -36,16 +37,22 @@ const documents: SearchDocument[] = controls.flatMap((control) => {
     const stepDocs = content.steps.map((step) => ({
       id: step.id,
       title: step.title,
-      context: `${control.name} · ${level.toUpperCase()}`,
+      context: `${control.name} · ${level.toUpperCase()}${step.ismControls.length > 0 ? ` · ${step.ismControls.join(' ')}` : ''}`,
       path: `/control/${control.id}/${level}#${step.id}`,
-      haystack: `${control.name} ${level} ${step.title} ${step.description} ${step.technicalDetails.join(' ')}`.toLowerCase()
+      haystack: `${control.name} ${level} ${step.title} ${step.description} ${step.ismControls.join(' ')} ${step.technicalDetails.join(' ')}`.toLowerCase()
     }));
 
     return [summaryDoc, ...stepDocs];
   });
 
   return [...base, ...levelDocs];
-});
+}).concat(auditPolicyEntries.map((entry) => ({
+  id: `audit-policy-${entry.id}`,
+  title: entry.name,
+  context: `Windows Audit Policy · ${entry.category} · ${entry.recommendation}`,
+  path: `/audit-policy#${entry.id}`,
+  haystack: `${entry.name} ${entry.category} ${entry.description} ${entry.considerations} ${entry.recommendation}`.toLowerCase()
+})));
 
 export function isMaturityLevel(value: string | undefined): value is MaturityLevel {
   return value === 'ml1' || value === 'ml2' || value === 'ml3';
@@ -73,4 +80,3 @@ export function search(query: string): SearchResult[] {
       path: document.path
     }));
 }
-

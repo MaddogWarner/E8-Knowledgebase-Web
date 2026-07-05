@@ -5,7 +5,15 @@ export interface ImplementationStep {
   id: string;
   title: string;
   description: string;
+  ismControls: string[];
   technicalDetails: string[];
+}
+
+export type StepStateValue = 'implemented' | 'notApplicable' | 'notImplemented';
+
+export interface StepStatus {
+  state: StepStateValue;
+  reason?: string;
 }
 
 export interface MaturityLevelContent {
@@ -37,4 +45,3 @@ export interface ReferenceLink {
   title: string;
   url: string;
 }
-

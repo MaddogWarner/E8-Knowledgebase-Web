@@ -24,7 +24,7 @@ licensing mode so maturity-level pages show separate Microsoft 365 / Microsoft
 Defender additions without mixing them into the built-in Windows guidance.
 
 The web app can also act as a lightweight implementation tracker. Manual step
-ticks are stored only in the browser, and CSV evidence from the
+statuses are stored only in the browser, and CSV evidence from the
 `e8-hardening-audit-policy-compliance-checker` is held in memory for the current
 session only.
 
@@ -46,13 +46,18 @@ Each control also surfaces an **ML0** baseline ("no controls implemented").
 
 ## Features
 
-- Desktop-first layout: sidebar of all eight mitigations + M365 + About, with a wide content pane (responsive to mobile).
+- Desktop-first layout: sidebar of all eight mitigations + Windows Audit Policy + M365 + About, with a wide content pane (responsive to mobile).
 - Per-control overview, ML0 baseline, and ML1/ML2/ML3 maturity tabs with numbered, copy-able command / GPO / registry blocks.
-- **Global search** across every control, step and technical detail.
+- Per-step implementation status: Not Implemented, Implemented or Not Applicable with an optional local reason.
+- Compliance dashboard with a target-scoped progress ring and per-mitigation stacked bars.
+- **Global search** across every control, step, ISM control ID, technical detail and Windows Audit Policy entry.
 - **Deep-link URLs** per control and maturity level (e.g. `/control/3/ml2`) for bookmarking and sharing.
 - **Print / Save as PDF** for clean runbook output.
 - **Dark mode** toggle (remembered locally).
-- Per-step implementation ticks with per-mitigation progress bars.
+- ISM control capsules on mapped implementation steps.
+- Windows Audit Policy reference page with grouped recommendations.
+- Exportable compliance report as CSV, plus printable report output.
+- Environment profiles for separate systems or teams; progress, target maturity, hide-completed and M365 licence mode are isolated per profile.
 - Client-side CSV evidence upload for the E8 hardening audit and policy
   compliance checker. Only cleanly mapped E8 rows are used; MDE and audit-policy
   rows are ignored, and host/user/IP/raw CSV data is not persisted.
@@ -83,10 +88,10 @@ Each control also surfaces an **ML0** baseline ("no controls implemented").
 A single hardened container: a React + TypeScript + Vite SPA built and served by
 nginx, which terminates TLS, redirects HTTP→HTTPS, and sets a strict
 Content-Security-Policy and other security headers. There is **no backend and no
-database** — all content is static, and the only stored state (M365 licensing mode,
-theme, target maturity, hide-complete preference and manual step ticks) lives in
-the browser's `localStorage`. CSV-derived evidence remains in memory only and
-clears on refresh.
+database** — all content is static, and the only stored state (theme, profile
+names, target maturity, hide-complete preference, M365 licensing mode and manual
+step statuses / N/A reasons) lives in the browser's `localStorage`. CSV-derived
+evidence remains in memory only and clears on refresh or profile switch.
 
 ```text
 [ browser ] ──HTTPS──▶ [ nginx (TLS + security headers) ] ──▶ static SPA (dist/)
@@ -173,9 +178,12 @@ BASE_URL=http://localhost:5173 node scripts/capture-screenshots.mjs
 
 This tool does not collect, record, store, transmit or share any user data, and
 makes no external network calls. The licensing-mode, theme, target maturity,
-hide-complete preference and manual implementation ticks are kept only in your
-browser. CSV audit evidence is parsed locally, mapped to the small set of KB
-steps it cleanly covers, and cleared when the page is refreshed.
+hide-complete preference, profile names and manual implementation statuses are
+kept only in your browser. CSV audit evidence is parsed locally, mapped to the
+small set of KB steps it cleanly covers, and cleared when the page is refreshed
+or the active profile changes. Exported reports contain KB content, profile name,
+target maturity, step status, local N/A reason and evidence outcome only; they do
+not include hostnames, IP addresses, usernames or raw audit rows.
 
 ## Contributors
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { appInfo } from '../data/appInfo';
+import { auditPolicyEntries } from '../data/auditPolicy';
 import { controls } from '../data/controls';
 import { protections } from '../data/m365';
 
@@ -19,8 +20,29 @@ describe('controls data', () => {
         for (const step of control[level].steps) {
           expect(step.title).toBeTruthy();
           expect(step.description).toBeTruthy();
+          expect(Array.isArray(step.ismControls)).toBe(true);
         }
       }
+    }
+  });
+
+  it('contains verified ISM mappings for 64 implementation steps', () => {
+    const steps = controls.flatMap((control) => (['ml1', 'ml2', 'ml3'] as const).flatMap((level) => control[level].steps));
+    expect(steps.filter((step) => step.ismControls.length > 0)).toHaveLength(64);
+    for (const identifier of steps.flatMap((step) => step.ismControls)) {
+      expect(identifier).toMatch(/^ISM-\d{4}$/);
+    }
+  });
+});
+
+describe('audit policy data', () => {
+  it('contains generated Windows Audit Policy entries with valid recommendations', () => {
+    expect(auditPolicyEntries.length).toBeGreaterThan(20);
+    expect(auditPolicyEntries.some((entry) => entry.name === 'Audit Account Lockout')).toBe(true);
+    for (const entry of auditPolicyEntries) {
+      expect(['Success', 'Failure', 'Success & Failure', 'Not Recommended']).toContain(entry.recommendation);
+      expect(entry.category).toBeTruthy();
+      expect(entry.description).toBeTruthy();
     }
   });
 });
@@ -58,4 +80,3 @@ describe('m365 protections', () => {
     expect(e5.some((item) => item.title.includes('E5'))).toBe(true);
   });
 });
-
