@@ -922,7 +922,31 @@ select {
 }
 
 .evidence-summary {
+  margin-top: 8px;
+}
+
+.evidence-summary > p {
   font-weight: 750;
+}
+
+.evidence-disclosure {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.evidence-disclosure summary {
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.evidence-disclosure ul {
+  margin: 8px 0 0;
+  padding-left: 20px;
+}
+
+.evidence-disclosure li + li {
+  margin-top: 4px;
 }
 
 .upload-actions,

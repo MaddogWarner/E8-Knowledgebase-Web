@@ -91,7 +91,9 @@ test('home target maturity hide switch filters completed mitigations', async ({ 
 test('CSV evidence upload marks mapped steps and clears on reload', async ({ page }) => {
   await page.goto('/');
   await page.locator('input[type="file"]').setInputFiles(path.resolve('src/tests/fixtures/audit-sample.csv'));
-  await expect(page.getByText('Matched 4 of 5 E8 checks across 2 mitigations. MDE and audit-policy rows ignored.')).toBeVisible();
+  await expect(page.getByText('Matched 9 of 11 E8 checks and 1 of 2 audit-policy checks across 2 mitigations. MDE rows ignored.')).toBeVisible();
+  await page.getByText('2 checks have no matching KB step').click();
+  await expect(page.getByText('Secure Boot')).toBeVisible();
 
   // Navigate within the SPA (client-side) so the in-memory evidence survives;
   // a full page load would correctly reset it.
@@ -100,6 +102,10 @@ test('CSV evidence upload marks mapped steps and clears on reload', async ({ pag
   await expect(page).toHaveURL(/\/control\/5\/ml2/);
   await expect(page.locator('.status-badge.evidenced')).toBeVisible();
   await expect(page.locator('.status-badge.failed')).toBeVisible();
+
+  await page.getByRole('link', { name: 'Mitigation 4 User Application Hardening', exact: true }).click();
+  await page.getByRole('tab', { name: 'ML2' }).click();
+  await expect(page.locator('[id="4-ml2-2"] .status-badge.failed')).toHaveText('Audit: non-compliant');
 
   await page.reload();
   await expect(page.locator('.status-badge.evidenced')).toHaveCount(0);

@@ -7,6 +7,11 @@ const auditToolUrl = 'https://github.com/MaddogWarner/e8-hardening-audit-policy-
 export function EvidenceUpload() {
   const { applyCsv, clear, summary } = useEvidence();
   const inputRef = useRef<HTMLInputElement>(null);
+  const summaryText = summary
+    ? summary.totalAuditPolicy > 0
+      ? `Matched ${summary.matched} of ${summary.totalE8} E8 checks and ${summary.matchedAuditPolicy} of ${summary.totalAuditPolicy} audit-policy checks across ${summary.controlsCovered} mitigations. MDE rows ignored.`
+      : `Matched ${summary.matched} of ${summary.totalE8} E8 checks across ${summary.controlsCovered} mitigations. MDE rows ignored.`
+    : '';
 
   function handleFile(file: File | undefined) {
     if (!file) return;
@@ -30,9 +35,19 @@ export function EvidenceUpload() {
           Upload a CSV from the <a href={auditToolUrl} target="_blank" rel="noopener noreferrer">E8 hardening audit and policy compliance checker</a>. Processing is local to this browser session.
         </p>
         {summary && (
-          <p className="evidence-summary">
-            Matched {summary.matched} of {summary.totalE8} E8 checks across {summary.controlsCovered} mitigations. MDE and audit-policy rows ignored.
-          </p>
+          <div className="evidence-summary">
+            <p>{summaryText}</p>
+            {summary.unmatchedChecks.length > 0 && (
+              <details className="evidence-disclosure">
+                <summary>{summary.unmatchedChecks.length} checks have no matching KB step</summary>
+                <ul>
+                  {summary.unmatchedChecks.map((check) => (
+                    <li key={check}>{check}</li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </div>
         )}
       </div>
       <div className="upload-actions">
