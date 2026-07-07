@@ -158,3 +158,43 @@ test('about page links to the audit tool repository', async ({ page }) => {
     'https://github.com/MaddogWarner/e8-hardening-audit-policy-compliance-checker'
   );
 });
+
+test('status filter chips support multi-select, empty state, tab persistence and navigation reset', async ({ page }) => {
+  await page.goto('/control/1/ml1');
+  await page.locator('[id="1-ml1-1"]').getByRole('radio', { name: 'Implemented', exact: true }).click();
+
+  await page.getByRole('button', { name: 'Marked implemented · 1' }).click();
+  await expect(page.getByText('Showing 1 of 4 steps')).toBeVisible();
+  await expect(page.locator('.steps-list .step-card')).toHaveCount(1);
+  await expect(page.locator('[id="1-ml1-1"]')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Remaining · 9' }).click();
+  await expect(page.locator('.steps-list .step-card')).toHaveCount(4);
+  await expect(page.getByText('Showing 4 of 4 steps')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Marked implemented · 1' }).click();
+  await expect(page.locator('.steps-list .step-card')).toHaveCount(3);
+  await expect(page.locator('[id="1-ml1-1"]')).toHaveCount(0);
+  await expect(page.getByText('Showing 3 of 4 steps')).toBeVisible();
+
+  await page.getByRole('button', { name: 'Clear filters' }).click();
+  await expect(page.locator('.steps-list .step-card')).toHaveCount(4);
+  await expect(page.getByText(/Showing \d+ of \d+ steps/)).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Marked implemented · 1' }).click();
+  await page.getByRole('tab', { name: 'ML2' }).click();
+  await expect(page.getByRole('button', { name: 'Marked implemented · 1' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByText('No steps in this maturity level match the selected filters.')).toBeVisible();
+
+  await page.getByRole('link', { name: 'Mitigation 2 Patch Applications', exact: true }).click();
+  await expect(page).toHaveURL(/\/control\/2\/ml1/);
+  await expect(page.getByRole('button', { name: /Marked implemented/ })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByText(/Showing \d+ of \d+ steps/)).toHaveCount(0);
+});
+
+test('home compliance chart rows link to control ML1 pages', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('link', { name: /3\. Configure MS Office Macros/ }).click();
+  await expect(page).toHaveURL(/\/control\/3\/ml1/);
+  await expect(page.getByRole('heading', { name: 'Configure MS Office Macros' })).toBeVisible();
+});

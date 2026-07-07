@@ -1,3 +1,5 @@
+import type { StepDisplayState } from '../lib/status';
+
 interface ProgressBarProps {
   evidenced: number;
   implemented: number;
@@ -5,13 +7,33 @@ interface ProgressBarProps {
   failed: number;
   remaining: number;
   label?: string;
+  activeFilters?: StepDisplayState[];
+  onToggleFilter?: (state: StepDisplayState) => void;
 }
 
-export function ProgressBar({ evidenced, implemented, notApplicable, failed, remaining, label = 'steps' }: ProgressBarProps) {
+const legendItems: Array<{ state: StepDisplayState; label: string }> = [
+  { state: 'evidenced', label: 'Evidence provided' },
+  { state: 'implemented', label: 'Marked implemented' },
+  { state: 'notApplicable', label: 'N/A' },
+  { state: 'failed', label: 'Audit: non-compliant' },
+  { state: 'remaining', label: 'Remaining' }
+];
+
+export function ProgressBar({
+  evidenced,
+  implemented,
+  notApplicable,
+  failed,
+  remaining,
+  label = 'steps',
+  activeFilters = [],
+  onToggleFilter
+}: ProgressBarProps) {
   const total = evidenced + implemented + notApplicable + failed + remaining;
   const denominator = total - notApplicable;
   const done = evidenced + implemented;
   const percentage = denominator <= 0 ? 100 : Math.round((done / denominator) * 100);
+  const counts: Record<StepDisplayState, number> = { evidenced, implemented, notApplicable, failed, remaining };
 
   function width(count: number) {
     return total === 0 ? '0%' : `${(count / total) * 100}%`;
@@ -31,11 +53,30 @@ export function ProgressBar({ evidenced, implemented, notApplicable, failed, rem
         <span className="progress-segment remaining" style={{ width: width(remaining) }} />
       </div>
       <div className="progress-legend" aria-label="Progress legend">
-        <span><i className="legend-dot evidenced" />Evidence provided</span>
-        <span><i className="legend-dot implemented" />Marked implemented</span>
-        <span><i className="legend-dot notApplicable" />N/A</span>
-        <span><i className="legend-dot failed" />Audit: non-compliant</span>
-        <span><i className="legend-dot remaining" />Remaining</span>
+        {legendItems.map((item) => {
+          const labelText = onToggleFilter ? `${item.label} · ${counts[item.state]}` : item.label;
+          if (onToggleFilter) {
+            return (
+              <button
+                key={item.state}
+                type="button"
+                className="legend-chip"
+                aria-pressed={activeFilters.includes(item.state)}
+                onClick={() => onToggleFilter(item.state)}
+              >
+                <i className={`legend-dot ${item.state}`} />
+                {labelText}
+              </button>
+            );
+          }
+
+          return (
+            <span key={item.state}>
+              <i className={`legend-dot ${item.state}`} />
+              {labelText}
+            </span>
+          );
+        })}
       </div>
     </section>
   );
