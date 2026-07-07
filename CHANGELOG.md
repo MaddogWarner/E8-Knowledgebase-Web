@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 3.1.0 — 2026-07-07
+
+### Added
+
+- Progress legend chips on control pages now filter the active maturity level by status, including multi-select, counts, a clear action and an explicit empty state.
+- Home-page compliance chart rows now link directly to each mitigation's ML1 page with hover and keyboard focus affordances.
+
 ## 3.0.1 — 2026-07-05
 
 Cybersecurity technical content corrections (ported from the Android review, shared across all platforms).

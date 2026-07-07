@@ -354,11 +354,53 @@ select {
   align-items: center;
 }
 
+.filter-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  align-items: center;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 750;
+}
+
+.filter-summary button {
+  min-height: 32px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--accent-strong);
+  cursor: pointer;
+  font-weight: 800;
+  padding: 0 10px;
+}
+
+.filter-summary button:hover {
+  border-color: var(--accent);
+  background: var(--panel-muted);
+}
+
+.filter-summary button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
 .steps-list {
   display: grid;
   gap: 14px;
   margin-top: 18px;
 }
+
+.empty-state {
+  margin: 0;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--muted);
+  padding: 18px;
+}
+
 
 .step-card {
   display: grid;
@@ -812,6 +854,38 @@ select {
   gap: 6px;
 }
 
+.legend-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 4px 9px;
+}
+
+.legend-chip:hover {
+  border-color: var(--accent);
+  background: var(--panel-muted);
+  color: var(--text);
+}
+
+.legend-chip:focus-visible,
+.chart-row:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.legend-chip[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 14%, var(--panel));
+  color: var(--accent-strong);
+  font-weight: 800;
+}
+
 .legend-dot {
   display: inline-block;
   width: 10px;
@@ -1003,6 +1077,18 @@ select {
   grid-template-columns: minmax(150px, 240px) minmax(0, 1fr);
   gap: 12px;
   align-items: center;
+  border-radius: 8px;
+  padding: 4px;
+  text-decoration: none;
+}
+
+.chart-row:hover {
+  background: var(--panel-muted);
+}
+
+.chart-row:hover .chart-label {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .chart-label {

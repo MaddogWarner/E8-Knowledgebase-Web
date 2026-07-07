@@ -1,3 +1,5 @@
+import { Link } from 'react-router';
+
 interface ComplianceChartRow {
   id: number;
   name: string;
@@ -25,14 +27,14 @@ export function ComplianceChart({ rows }: ComplianceChartProps) {
       {rows.map((row) => {
         const total = row.implemented + row.notApplicable + row.pending;
         return (
-          <div key={row.id} className="chart-row">
+          <Link key={row.id} to={`/control/${row.id}/ml1`} className="chart-row">
             <span className="chart-label">{row.id}. {row.name}</span>
             <div className="chart-bar" aria-label={`${row.name}: ${row.implemented} implemented, ${row.notApplicable} not applicable, ${row.pending} pending`}>
               <span className="progress-segment implemented" style={{ width: width(row.implemented, total) }} />
               <span className="progress-segment notApplicable" style={{ width: width(row.notApplicable, total) }} />
               <span className="progress-segment remaining" style={{ width: width(row.pending, total) }} />
             </div>
-          </div>
+          </Link>
         );
       })}
     </div>

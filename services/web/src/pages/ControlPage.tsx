@@ -1,5 +1,5 @@
 import { Printer } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Navigate, useLocation, useParams } from 'react-router';
 import { GapNote } from '../components/GapNote';
 import { M365Additions } from '../components/M365Additions';
@@ -11,10 +11,11 @@ import { useEvidence } from '../lib/EvidenceContext';
 import { resolveIcon } from '../lib/icons';
 import { isLicenseMode } from '../lib/license';
 import { isMaturityLevel } from '../lib/search';
-import { isStepCompleteOrNotApplicable, isStepDone, statusCounts } from '../lib/status';
+import { classifyStep, isStepCompleteOrNotApplicable, isStepDone, statusCounts } from '../lib/status';
 import { useLocalStorage } from '../lib/useLocalStorage';
 import { useStepProgress } from '../lib/useStepProgress';
 import type { MaturityLevel, Microsoft365LicenseMode } from '../types';
+import type { StepDisplayState } from '../lib/status';
 
 export function ControlPage() {
   const { controlId, level } = useParams();
@@ -26,6 +27,7 @@ export function ControlPage() {
   const [targetMaturity] = useLocalStorage<MaturityLevel>('e8kb.targetMaturity', 'ml1', isMaturityLevel);
   const { evidence } = useEvidence();
   const { status } = useStepProgress();
+  const [activeFilters, setActiveFilters] = useState<StepDisplayState[]>([]);
 
   useEffect(() => {
     if (location.hash) {
@@ -33,6 +35,10 @@ export function ControlPage() {
       element?.scrollIntoView({ block: 'start' });
     }
   }, [location.hash, activeLevel]);
+
+  useEffect(() => {
+    setActiveFilters([]);
+  }, [id]);
 
   if (!control) return <Navigate to="/not-found" replace />;
   if (level && !isMaturityLevel(level)) return <Navigate to={`/control/${id}/ml1`} replace />;
@@ -45,6 +51,15 @@ export function ControlPage() {
   const levelTotal = content.steps.length - levelNotApplicable;
   const levelDone = content.steps.filter((step) => isStepDone(status(step.id), evidence[step.id])).length;
   const beyondTarget = maturityLevels.findIndex((item) => item.id === activeLevel) > maturityLevels.findIndex((item) => item.id === targetMaturity);
+  const visibleSteps = activeFilters.length === 0
+    ? content.steps
+    : content.steps.filter((step) => activeFilters.includes(classifyStep(status(step.id), evidence[step.id])));
+
+  function toggleFilter(state: StepDisplayState) {
+    setActiveFilters((current) => current.includes(state)
+      ? current.filter((item) => item !== state)
+      : [...current, state]);
+  }
 
   return (
     <div className="page-stack">
@@ -69,7 +84,7 @@ export function ControlPage() {
         <p>{control.ml0Description}</p>
       </section>
 
-      <ProgressBar {...progressCounts} />
+      <ProgressBar {...progressCounts} activeFilters={activeFilters} onToggleFilter={toggleFilter} />
 
       <MaturityTabs controlId={control.id} activeLevel={activeLevel} />
 
@@ -80,10 +95,18 @@ export function ControlPage() {
           {beyondTarget && <span className="beyond-chip">Beyond target</span>}
         </div>
         <p className="level-progress">{activeLevel.toUpperCase()} · {levelDone}/{levelTotal} steps implemented</p>
+        {activeFilters.length > 0 && (
+          <div className="filter-summary">
+            <span>Showing {visibleSteps.length} of {content.steps.length} steps</span>
+            <button type="button" onClick={() => setActiveFilters([])}>Clear filters</button>
+          </div>
+        )}
         <div className="steps-list">
-          {content.steps.map((step, index) => (
-            <StepCard key={step.id} step={step} index={index} />
-          ))}
+          {visibleSteps.length > 0
+            ? visibleSteps.map((step) => (
+                <StepCard key={step.id} step={step} index={content.steps.indexOf(step)} />
+              ))
+            : <p className="empty-state">No steps in this maturity level match the selected filters.</p>}
         </div>
       </section>
 
