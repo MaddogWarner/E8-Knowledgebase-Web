@@ -3,6 +3,18 @@ import { appInfo } from '../data/appInfo';
 import { useProfiles } from '../lib/profiles';
 import type { ReferenceLink } from '../types';
 
+// Defined here rather than in appInfo.ts, which is generator-owned.
+const buildLinks: ReferenceLink[] = [
+  {
+    title: 'Essential 8 Knowledge Base on GitHub',
+    url: 'https://github.com/MaddogWarner/E8-Knowledgebase-Web'
+  },
+  {
+    title: 'E8 hardening audit & policy compliance checker (assessment script)',
+    url: 'https://github.com/MaddogWarner/e8-hardening-audit-policy-compliance-checker'
+  }
+];
+
 function LinkList({ links }: { links: ReferenceLink[] }) {
   return (
     <ul className="link-list">
@@ -76,6 +88,19 @@ export function AboutPage() {
         <h2>References</h2>
         <LinkList links={appInfo.referenceLinks} />
       </section>
+
+      <section className="content-section">
+        <h2>About this build</h2>
+        <p>
+          Version {__APP_VERSION__} · Built {formatBuildDate(__BUILD_DATE__)}
+        </p>
+        <LinkList links={buildLinks} />
+      </section>
     </div>
   );
+}
+
+function formatBuildDate(isoDate: string): string {
+  const [year, month, day] = isoDate.split('-');
+  return `${day}/${month}/${year}`;
 }

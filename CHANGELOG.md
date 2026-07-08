@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 3.3.1 — 2026-07-08
+
+### Added
+
+- About page now shows the running app version and build date, sourced automatically from `package.json` at build time so it never needs manual updates.
+- About page links directly to the project's GitHub repository and to the E8 hardening audit & policy compliance checker (assessment script).
+
 ## 3.3.0 — 2026-07-08
 
 ### Added
