@@ -44,6 +44,37 @@ jobs:
             type=sha,format=short
             type=raw,value=latest,enable={{is_default_branch}}
 
+      - name: Build image for scan
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: services/web/Dockerfile
+          platforms: linux/amd64
+          load: true
+          push: false
+          provenance: false
+          tags: ${{ env.IMAGE }}:scan-${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Trivy scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: image
+          image-ref: ${{ env.IMAGE }}:scan-${{ github.sha }}
+          format: sarif
+          output: trivy-image.sarif
+          severity: CRITICAL
+          exit-code: '1'
+
+      - name: Upload Trivy results
+        if: always()
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: trivy-image.sarif
+          category: container
+
       - name: Build and push
         id: push
         uses: docker/build-push-action@v7
@@ -57,20 +88,3 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
-
-      - name: Trivy scan
-        uses: aquasecurity/trivy-action@master
-        with:
-          scan-type: image
-          image-ref: ${{ env.IMAGE }}@${{ steps.push.outputs.digest }}
-          format: sarif
-          output: trivy-image.sarif
-          severity: CRITICAL,HIGH
-          exit-code: '0'
-
-      - name: Upload Trivy results
-        if: always()
-        uses: github/codeql-action/upload-sarif@v4
-        with:
-          sarif_file: trivy-image.sarif
-          category: container
