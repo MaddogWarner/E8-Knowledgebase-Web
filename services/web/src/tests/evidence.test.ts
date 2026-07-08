@@ -9,8 +9,10 @@ describe('deriveEvidence', () => {
 
     expect(summary.totalE8).toBe(11);
     expect(summary.matched).toBe(9);
-    expect(summary.totalAuditPolicy).toBe(2);
+    expect(summary.totalAuditPolicy).toBe(5);
     expect(summary.matchedAuditPolicy).toBe(1);
+    expect(summary.matchedAuditPolicyEntries).toBe(4);
+    expect(summary.unmatchedAuditPolicyChecks).toEqual(['Security Event Log Size']);
     expect(summary.controlsCovered).toBe(2);
     expect(summary.statuses['5-ml2-2']).toBe('pass');
     expect(summary.statuses['5-ml2-1']).toBe('fail');
@@ -21,6 +23,18 @@ describe('deriveEvidence', () => {
     expect(summary.statuses['4-ml3-2']).toBeUndefined();
     expect(summary.statuses).not.toHaveProperty('Secure Boot');
     expect(summary.unmatchedChecks).toEqual(['Secure Boot', 'Defender Real-Time Protection']);
+    expect(summary.auditPolicyEntryStates['process-creation']).toEqual({
+      state: 'nonCompliant',
+      current: 'Process creation auditing disabled',
+      expected: 'Success'
+    });
+    expect(summary.auditPolicyEntryStates.logon).toEqual({ state: 'compliant' });
+    expect(summary.auditPolicyEntryStates['special-logon']).toEqual({
+      state: 'review',
+      current: 'Success',
+      expected: 'Success and Failure'
+    });
+    expect(summary.auditPolicyEntryStates['detailed-file-share']).toEqual({ state: 'compliant' });
   });
 
   it('maps all curated clean checks by check identity and ignores the ML column', () => {
@@ -118,6 +132,82 @@ describe('deriveEvidence', () => {
     expect(summary.statuses['4-ml2-3']).toBe('fail');
   });
 
+  it('derives AuditPolicy entry states from status and enabled values', () => {
+    const summary = deriveEvidence([
+      row('Audit Logon', 'PASS', 'False', 'ML2', 'AuditPolicy'),
+      row('Audit Logoff', 'FAIL', 'True', 'ML2', 'AuditPolicy'),
+      row('Audit Registry', 'REVIEW', 'True', 'ML2', 'AuditPolicy'),
+      row('Audit File Share', 'NOT SUPPORTED', 'False', 'ML2', 'AuditPolicy'),
+      row('Audit File System', 'N/A', 'False', 'ML2', 'AuditPolicy'),
+      row('Audit Kernel Object', '', 'True', 'ML2', 'AuditPolicy'),
+      row('Audit Process Termination', '', 'False', 'ML2', 'AuditPolicy')
+    ]);
+
+    expect(summary.auditPolicyEntryStates.logon).toEqual({ state: 'compliant' });
+    expect(summary.auditPolicyEntryStates.logoff?.state).toBe('nonCompliant');
+    expect(summary.auditPolicyEntryStates.registry?.state).toBe('review');
+    expect(summary.auditPolicyEntryStates['file-share']).toBeUndefined();
+    expect(summary.auditPolicyEntryStates['file-system']).toBeUndefined();
+    expect(summary.auditPolicyEntryStates['kernel-object']).toEqual({ state: 'compliant' });
+    expect(summary.auditPolicyEntryStates['process-termination']?.state).toBe('nonCompliant');
+  });
+
+  it('rolls AuditPolicy entry duplicates up with non-compliant beating review and compliant', () => {
+    const summary = deriveEvidence([
+      row('Audit Logon', 'PASS', 'True', 'ML2', 'AuditPolicy'),
+      row('Audit Logon', 'REVIEW', 'True', 'ML2', 'AuditPolicy', {
+        detail: 'Success',
+        requiredSetting: 'Success and Failure'
+      }),
+      row('Audit Logon', 'FAIL', 'False', 'ML2', 'AuditPolicy', {
+        detail: 'No Auditing',
+        requiredSetting: 'Success and Failure'
+      }),
+      row('Audit Logon', 'FAIL', 'False', 'ML2', 'AuditPolicy', {
+        detail: 'Failure',
+        requiredSetting: 'Success and Failure'
+      })
+    ]);
+
+    expect(summary.auditPolicyEntryStates.logon).toEqual({
+      state: 'nonCompliant',
+      current: 'No Auditing',
+      expected: 'Success and Failure'
+    });
+    expect(summary.matchedAuditPolicyEntries).toBe(1);
+  });
+
+  it('keeps AuditPolicy current and expected details only for non-compliant and review states', () => {
+    const summary = deriveEvidence([
+      row('Audit Logon', 'PASS', 'True', 'ML2', 'AuditPolicy', {
+        detail: 'Success and Failure',
+        rawValue: 'Success and Failure',
+        requiredSetting: 'Success and Failure'
+      }),
+      row('Audit Logoff', 'FAIL', 'False', 'ML2', 'AuditPolicy', {
+        rawValue: 'No Auditing',
+        requiredSetting: 'Success'
+      }),
+      row('Audit Special Logon', 'REVIEW', 'True', 'ML2', 'AuditPolicy', {
+        detail: 'Success',
+        rawValue: 'Failure',
+        requiredSetting: 'Success and Failure'
+      })
+    ]);
+
+    expect(summary.auditPolicyEntryStates.logon).toEqual({ state: 'compliant' });
+    expect(summary.auditPolicyEntryStates.logoff).toEqual({
+      state: 'nonCompliant',
+      current: 'No Auditing',
+      expected: 'Success'
+    });
+    expect(summary.auditPolicyEntryStates['special-logon']).toEqual({
+      state: 'review',
+      current: 'Success',
+      expected: 'Success and Failure'
+    });
+  });
+
   it('collects deduped unmatched checks from E8 rows only with original casing', () => {
     const summary = deriveEvidence([
       row('Secure Boot', 'PASS'),
@@ -131,15 +221,39 @@ describe('deriveEvidence', () => {
     expect(summary.totalAuditPolicy).toBe(1);
     expect(summary.matchedAuditPolicy).toBe(0);
   });
+
+  it('collects deduped unmatched AuditPolicy checks with original casing', () => {
+    const summary = deriveEvidence([
+      row('Security Event Log Size', 'FAIL', 'False', 'ML2', 'AuditPolicy'),
+      row('security event log size', 'PASS', 'True', 'ML2', 'AuditPolicy'),
+      row('NTLM Outgoing Traffic Auditing', 'FAIL', 'False', 'ML2', 'AuditPolicy'),
+      row('Audit Logon', 'N/A', 'False', 'ML2', 'AuditPolicy')
+    ]);
+
+    expect(summary.unmatchedAuditPolicyChecks).toEqual(['Security Event Log Size', 'NTLM Outgoing Traffic Auditing']);
+    expect(summary.matchedAuditPolicyEntries).toBe(0);
+    expect(summary.totalAuditPolicy).toBe(4);
+    expect(summary.matchedAuditPolicy).toBe(0);
+  });
 });
 
-function row(check: string, status = 'PASS', enabled = '', ml = 'ML3', assessmentType = 'E8'): Record<string, string> {
+function row(
+  check: string,
+  status = 'PASS',
+  enabled = '',
+  ml = 'ML3',
+  assessmentType = 'E8',
+  values: { detail?: string; rawValue?: string; requiredSetting?: string } = {}
+): Record<string, string> {
   return {
     AssessmentType: assessmentType,
     Category: 'Test',
     Check: check,
     ML: ml,
     Status: status,
-    Enabled: enabled
+    Enabled: enabled,
+    Detail: values.detail ?? '',
+    RawValue: values.rawValue ?? '',
+    RequiredSetting: values.requiredSetting ?? ''
   };
 }

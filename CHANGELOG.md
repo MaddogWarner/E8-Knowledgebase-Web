@@ -4,6 +4,17 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 3.3.0 — 2026-07-08
+
+### Added
+
+- Windows Audit Policy entries now show uploaded CSV evidence status chips for matching AuditPolicy checks, including compliant, non-compliant and review states.
+- The Audit Policy page now summarises matched audit-policy checks and discloses uploaded AuditPolicy checks that have no page entry.
+
+### Changed
+
+- CSV upload summaries now link to the Windows Audit Policy page and report page-entry AuditPolicy matches separately from Essential Eight step evidence.
+
 ## 3.2.0 — 2026-07-08
 
 ### Added

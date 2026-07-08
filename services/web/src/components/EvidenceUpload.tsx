@@ -1,5 +1,6 @@
 import { Upload, X } from 'lucide-react';
 import { useRef } from 'react';
+import { Link } from 'react-router';
 import { useEvidence } from '../lib/EvidenceContext';
 
 const auditToolUrl = 'https://github.com/MaddogWarner/e8-hardening-audit-policy-compliance-checker';
@@ -7,11 +8,6 @@ const auditToolUrl = 'https://github.com/MaddogWarner/e8-hardening-audit-policy-
 export function EvidenceUpload() {
   const { applyCsv, clear, summary } = useEvidence();
   const inputRef = useRef<HTMLInputElement>(null);
-  const summaryText = summary
-    ? summary.totalAuditPolicy > 0
-      ? `Matched ${summary.matched} of ${summary.totalE8} E8 checks and ${summary.matchedAuditPolicy} of ${summary.totalAuditPolicy} audit-policy checks across ${summary.controlsCovered} mitigations. MDE rows ignored.`
-      : `Matched ${summary.matched} of ${summary.totalE8} E8 checks across ${summary.controlsCovered} mitigations. MDE rows ignored.`
-    : '';
 
   function handleFile(file: File | undefined) {
     if (!file) return;
@@ -36,7 +32,14 @@ export function EvidenceUpload() {
         </p>
         {summary && (
           <div className="evidence-summary">
-            <p>{summaryText}</p>
+            {summary.totalAuditPolicy > 0 ? (
+              <p>
+                Matched {summary.matched} of {summary.totalE8} E8 checks across {summary.controlsCovered} mitigations. Audit-policy: {summary.matchedAuditPolicyEntries} of {summary.totalAuditPolicy} checks matched — see the{' '}
+                <Link to="/audit-policy">Windows Audit Policy</Link> page. MDE rows ignored.
+              </p>
+            ) : (
+              <p>Matched {summary.matched} of {summary.totalE8} E8 checks across {summary.controlsCovered} mitigations. MDE rows ignored.</p>
+            )}
             {summary.unmatchedChecks.length > 0 && (
               <details className="evidence-disclosure">
                 <summary>{summary.unmatchedChecks.length} checks have no matching KB step</summary>
