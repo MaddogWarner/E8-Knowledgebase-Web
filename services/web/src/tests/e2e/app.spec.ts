@@ -91,9 +91,19 @@ test('home target maturity hide switch filters completed mitigations', async ({ 
 test('CSV evidence upload marks mapped steps and clears on reload', async ({ page }) => {
   await page.goto('/');
   await page.locator('input[type="file"]').setInputFiles(path.resolve('src/tests/fixtures/audit-sample.csv'));
-  await expect(page.getByText('Matched 9 of 11 E8 checks and 1 of 2 audit-policy checks across 2 mitigations. MDE rows ignored.')).toBeVisible();
+  await expect(page.locator('.evidence-summary').filter({ hasText: 'Audit-policy: 4 of 5 checks matched' })).toBeVisible();
   await page.getByText('2 checks have no matching KB step').click();
   await expect(page.getByText('Secure Boot')).toBeVisible();
+
+  await page.locator('.evidence-summary').getByRole('link', { name: 'Windows Audit Policy' }).click();
+  await expect(page).toHaveURL(/\/audit-policy/);
+  await expect(page.getByText('Matched 4 of 5 audit-policy checks from the uploaded report.')).toBeVisible();
+  await page.getByText('1 audit-policy checks have no entry on this page').click();
+  await expect(page.getByText('Security Event Log Size')).toBeVisible();
+  await expect(page.locator('[id="logon"] .audit-status-chip')).toHaveText('Compliant');
+  await expect(page.locator('[id="process-creation"] .audit-status-chip')).toHaveText('Non-compliant');
+  await expect(page.locator('[id="process-creation"]')).toContainText('Current: Process creation auditing disabled — Expected: Success');
+  await expect(page.locator('[id="special-logon"] .audit-status-chip')).toHaveText('Review');
 
   // Navigate within the SPA (client-side) so the in-memory evidence survives;
   // a full page load would correctly reset it.
@@ -117,10 +127,25 @@ test('Windows Audit Policy page and search work', async ({ page }) => {
   await page.getByRole('link', { name: /Windows Audit Policy/ }).click();
   await expect(page.getByRole('heading', { name: 'Windows Audit Policy' })).toBeVisible();
   await expect(page.getByText('Audit Account Lockout')).toBeVisible();
+  await expect(page.getByText(/audit-policy checks from the uploaded report/)).toHaveCount(0);
+  await expect(page.locator('.audit-status-chip')).toHaveCount(0);
 
   await page.getByRole('searchbox', { name: /Search controls/ }).fill('Audit Account Lockout');
   await page.getByRole('button', { name: /Audit Account Lockout/ }).click();
   await expect(page).toHaveURL(/\/audit-policy#account-lockout/);
+});
+
+test('Audit Policy evidence clears from the page', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('input[type="file"]').setInputFiles(path.resolve('src/tests/fixtures/audit-sample.csv'));
+  await page.locator('.evidence-summary').getByRole('link', { name: 'Windows Audit Policy' }).click();
+  await expect(page.locator('.audit-status-chip')).toHaveCount(4);
+
+  await page.getByRole('link', { name: 'Essential 8 Knowledge Base' }).click();
+  await page.getByRole('button', { name: 'Clear' }).click();
+  await page.getByRole('link', { name: 'Windows Audit Policy' }).click();
+  await expect(page.getByText(/audit-policy checks from the uploaded report/)).toHaveCount(0);
+  await expect(page.locator('.audit-status-chip')).toHaveCount(0);
 });
 
 test('CSV export downloads a compliance report', async ({ page }) => {

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { appInfo } from '../data/appInfo';
+import { auditPolicyEntryMapping } from '../data/auditMapping';
 import { auditPolicyEntries } from '../data/auditPolicy';
 import { controls } from '../data/controls';
 import { protections } from '../data/m365';
@@ -43,6 +44,17 @@ describe('audit policy data', () => {
       expect(['Success', 'Failure', 'Success & Failure', 'Not Recommended']).toContain(entry.recommendation);
       expect(entry.category).toBeTruthy();
       expect(entry.description).toBeTruthy();
+    }
+  });
+
+  it('maps each generated Windows Audit Policy entry exactly once', () => {
+    const entryIds = auditPolicyEntries.map((entry) => entry.id);
+    const mappedIds = Object.values(auditPolicyEntryMapping);
+
+    expect(new Set(mappedIds)).toEqual(new Set(entryIds));
+    expect(new Set(mappedIds).size).toBe(mappedIds.length);
+    for (const mappedId of mappedIds) {
+      expect(entryIds).toContain(mappedId);
     }
   });
 });

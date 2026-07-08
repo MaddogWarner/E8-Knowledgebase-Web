@@ -925,6 +925,13 @@ select {
   margin-top: 8px;
 }
 
+.audit-evidence-summary {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 12px;
+}
+
 .evidence-summary > p {
   font-weight: 750;
 }
@@ -1260,7 +1267,19 @@ select {
   line-height: 1.5;
 }
 
+.audit-entry-name {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.audit-evidence-detail {
+  margin-top: 6px !important;
+  font-size: 0.88rem;
+}
+
 .recommendation-chip,
+.audit-status-chip,
 .dc-chip {
   display: inline-flex;
   width: fit-content;
@@ -1291,8 +1310,38 @@ select {
   color: var(--warning-line);
 }
 
+.audit-status-chip.compliant {
+  border-color: #28a36a;
+  background: color-mix(in srgb, #28a36a 16%, var(--panel));
+  color: #147247;
+}
+
+.audit-status-chip.nonCompliant {
+  border-color: #cf3f3f;
+  background: color-mix(in srgb, #cf3f3f 14%, var(--panel));
+  color: #a62525;
+}
+
+.audit-status-chip.review {
+  border-color: var(--warning-line);
+  background: var(--warning-bg);
+  color: var(--warning-line);
+}
+
+:root.dark .audit-status-chip.compliant {
+  color: #4cc38a;
+}
+
+:root.dark .audit-status-chip.nonCompliant {
+  color: #f28b82;
+}
+
+.audit-status-chip,
 .dc-chip {
   margin-left: 6px;
+}
+
+.dc-chip {
   border-color: var(--accent);
   color: var(--accent-strong);
 }
