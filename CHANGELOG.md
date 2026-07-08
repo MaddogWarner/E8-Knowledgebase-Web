@@ -4,6 +4,18 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 3.2.0 — 2026-07-08
+
+### Added
+
+- CSV evidence upload now maps PowerShell Transcription and Audit Process Creation rows to their matching Essential Eight KB steps.
+- Upload summaries now count audit-policy evidence separately and disclose E8 checks that have no matching KB step.
+
+### Fixed
+
+- ASR rows reported in Audit or Warn mode now count as non-compliant evidence rather than disappearing from the dashboard.
+- Non-ASR review-only rows, unsupported checks, MDE rows and deliberately unmapped Windows hardening checks remain ignored without affecting step status.
+
 ## 3.1.0 — 2026-07-07
 
 ### Added
