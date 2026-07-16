@@ -22,6 +22,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml1-1",
           "title": "Enable the Application Identity service",
           "description": "AppLocker depends on the AppIDSvc service. Set it to start automatically on all in-scope workstations.",
+          "osScope": "both",
           "ismControls": [
             "ISM-0843",
             "ISM-1870",
@@ -36,6 +37,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml1-2",
           "title": "Create AppLocker default rules",
           "description": "Generate the default allow rules for each rule collection so signed Windows and Program Files binaries continue to run.",
+          "osScope": "both",
           "ismControls": [
             "ISM-0843",
             "ISM-1657"
@@ -50,6 +52,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml1-3",
           "title": "Block execution from user-writable locations",
           "description": "Default rules already deny anything outside Windows and Program Files for standard users. Verify and add explicit deny rules for %TEMP%, %LOCALAPPDATA% and the user profile root if custom paths exist.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1870",
             "ISM-1657"
@@ -63,6 +66,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml1-4",
           "title": "Log block events",
           "description": "AppLocker writes to a dedicated event log so blocked executions are auditable.",
+          "osScope": "both",
           "ismControls": [],
           "technicalDetails": [
             "Event log path: Applications and Services Logs → Microsoft → Windows → AppLocker",
@@ -79,6 +83,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml2-1",
           "title": "Extend AppLocker enforcement to servers",
           "description": "Apply the same allow-listing policy to internet-facing Windows servers. Test in audit mode first to identify business-required binaries outside Program Files.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1490",
             "ISM-1870",
@@ -94,6 +99,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml2-2",
           "title": "Deploy Windows Defender Application Control (WDAC)",
           "description": "WDAC provides stronger, kernel-level enforcement than AppLocker and survives admin tampering. Build a base policy from a clean reference machine.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1490",
             "ISM-1871",
@@ -109,6 +115,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml2-3",
           "title": "Forward AppLocker / WDAC events centrally",
           "description": "Use Windows Event Forwarding to ship execution and block events to a collector for retention and analysis.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1660"
           ],
@@ -127,6 +134,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml3-1",
           "title": "Apply Microsoft's recommended block rules",
           "description": "Microsoft publishes a list of well-known binaries (e.g. bash.exe, cdb.exe, cscript.exe variants) that bypass application control. Merge these into your WDAC policy.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1544"
           ],
@@ -139,6 +147,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml3-2",
           "title": "Enable the vulnerable driver blocklist",
           "description": "Windows ships with a Microsoft-maintained list of known-vulnerable drivers. Enabling this prevents loading drivers commonly abused for BYOVD attacks.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1659"
           ],
@@ -151,6 +160,7 @@ export const controls: EssentialControl[] = [
           "id": "1-ml3-3",
           "title": "Enforce Memory Integrity (HVCI)",
           "description": "Hypervisor-protected Code Integrity ensures only signed kernel code can run, complementing WDAC for user-mode code.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1896"
           ],
@@ -176,6 +186,7 @@ export const controls: EssentialControl[] = [
           "id": "2-ml1-1",
           "title": "Enable Microsoft Update for Office",
           "description": "Lets Office (M365 Apps / Office 2021+) receive updates automatically through the Microsoft Update channel.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1691"
           ],
@@ -188,6 +199,7 @@ export const controls: EssentialControl[] = [
           "id": "2-ml1-2",
           "title": "Enable Microsoft Edge auto-update",
           "description": "Edge updates ship through its own updater service. Keep the override allowing updates in place.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1691"
           ],
@@ -200,6 +212,7 @@ export const controls: EssentialControl[] = [
           "id": "2-ml1-3",
           "title": "Inventory installed applications",
           "description": "You can't patch what you can't see. Use built-in tools to enumerate installed software across the fleet.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1807"
           ],
@@ -213,6 +226,7 @@ export const controls: EssentialControl[] = [
           "id": "2-ml1-4",
           "title": "Uninstall unsupported applications",
           "description": "Vendor-unsupported software (e.g. legacy Java, Flash, end-of-life Office versions) must be removed.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1704"
           ],
@@ -231,6 +245,7 @@ export const controls: EssentialControl[] = [
           "id": "2-ml2-1",
           "title": "Tighten Office and Edge update cadence",
           "description": "Move M365 Apps to Current Channel for faster security update delivery, and shorten deferral windows.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1691"
           ],
@@ -243,6 +258,7 @@ export const controls: EssentialControl[] = [
           "id": "2-ml2-2",
           "title": "Enforce restart deadlines",
           "description": "Patches only mitigate once they are applied and the machine has restarted. Configure short deadlines for restart.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1691",
             "ISM-1693"
@@ -262,6 +278,7 @@ export const controls: EssentialControl[] = [
           "id": "2-ml3-1",
           "title": "Emergency patch deployment",
           "description": "When an exploited vulnerability is disclosed, push the patch immediately using WSUS / Windows Update for Business deadline of zero days.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1692"
           ],
@@ -287,6 +304,7 @@ export const controls: EssentialControl[] = [
           "id": "3-ml1-1",
           "title": "Block macros from the internet (Mark-of-the-Web)",
           "description": "Office blocks macros in files that carry the internet zone identifier. Enable the policy for each Office app.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1488"
           ],
@@ -300,6 +318,7 @@ export const controls: EssentialControl[] = [
           "id": "3-ml1-2",
           "title": "Disable VBA macros without notification",
           "description": "For users without a business requirement, the VBA Macro Notification Setting should be 'Disabled without notification' so no UI bypass is shown.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1671"
           ],
@@ -312,6 +331,7 @@ export const controls: EssentialControl[] = [
           "id": "3-ml1-3",
           "title": "Lock down the Trust Center",
           "description": "Stop users adding trusted locations / trusted publishers themselves.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1489"
           ],
@@ -330,6 +350,7 @@ export const controls: EssentialControl[] = [
           "id": "3-ml2-1",
           "title": "Allow only digitally signed macros",
           "description": "Set the macro notification setting so only macros signed by a trusted publisher run silently; all others are blocked.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1674",
             "ISM-1675"
@@ -343,6 +364,7 @@ export const controls: EssentialControl[] = [
           "id": "3-ml2-2",
           "title": "Enable AMSI scanning of macros",
           "description": "Office passes macro contents to AMSI so Microsoft Defender (or another AMSI provider) can inspect them before execution.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1672"
           ],
@@ -355,6 +377,7 @@ export const controls: EssentialControl[] = [
           "id": "3-ml2-3",
           "title": "Enable VBA macro logging",
           "description": "Office writes macro execution events to the Windows Application event log, source 'Microsoft Office <ver>'.",
+          "osScope": "workstation",
           "ismControls": [],
           "technicalDetails": [
             "Registry: HKCU\\Software\\Policies\\Microsoft\\Office\\16.0\\Common\\Security → EnableLogging = 1 (DWORD)",
@@ -371,6 +394,7 @@ export const controls: EssentialControl[] = [
           "id": "3-ml3-1",
           "title": "Require V3 (XML-DSig) signatures",
           "description": "V3 signatures cover VBA projects more completely than legacy signatures. After re-signing approved VBA projects, enable the Office policy that only trusts V3-signed macros.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1891"
           ],
@@ -384,6 +408,7 @@ export const controls: EssentialControl[] = [
           "id": "3-ml3-2",
           "title": "Restrict write access to Trusted Locations",
           "description": "Trusted Locations should live on a network share where NTFS ACLs restrict write to a small approval group; users have read-only access.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1487"
           ],
@@ -408,6 +433,7 @@ export const controls: EssentialControl[] = [
           "id": "4-ml1-1",
           "title": "Disable Internet Explorer 11",
           "description": "IE 11 is unsupported and should be blocked from launching as a standalone browser.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1654"
           ],
@@ -421,6 +447,7 @@ export const controls: EssentialControl[] = [
           "id": "4-ml1-2",
           "title": "Block Java in Microsoft Edge",
           "description": "Edge does not process Java applets natively. Ensure no third-party Java plugin is installed and that NPAPI/legacy plugin support remains disabled.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1486"
           ],
@@ -433,6 +460,7 @@ export const controls: EssentialControl[] = [
           "id": "4-ml1-3",
           "title": "Block web advertisements",
           "description": "Use Edge's built-in tracking prevention at Strict, which also blocks many tracking-based ad networks.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1485",
             "ISM-1585"
@@ -452,6 +480,7 @@ export const controls: EssentialControl[] = [
           "id": "4-ml2-1",
           "title": "Enable PowerShell logging",
           "description": "Module logging captures pipeline execution; script-block logging captures the actual code, including obfuscated scripts after de-obfuscation.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1623"
           ],
@@ -465,6 +494,7 @@ export const controls: EssentialControl[] = [
           "id": "4-ml2-2",
           "title": "Deploy Attack Surface Reduction rules",
           "description": "ASR rules are part of Microsoft Defender Antivirus. Start in audit mode, review event log, then enforce.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1667",
             "ISM-1668",
@@ -480,6 +510,7 @@ export const controls: EssentialControl[] = [
           "id": "4-ml2-3",
           "title": "Enable command-line process auditing",
           "description": "Captures the full command line for every process creation event (4688), essential for incident response.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1889"
           ],
@@ -498,6 +529,7 @@ export const controls: EssentialControl[] = [
           "id": "4-ml3-1",
           "title": "Remove PowerShell v2",
           "description": "Windows PowerShell 2.0 lacks modern logging and AMSI integration, making it a common downgrade target.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1621"
           ],
@@ -510,6 +542,7 @@ export const controls: EssentialControl[] = [
           "id": "4-ml3-2",
           "title": "Enforce Constrained Language Mode",
           "description": "Restricts PowerShell to a safer subset of language elements, blocking arbitrary .NET method invocation. Microsoft documents application control policy enforcement as the durable way to place PowerShell in Constrained Language Mode.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1622"
           ],
@@ -523,6 +556,7 @@ export const controls: EssentialControl[] = [
           "id": "4-ml3-3",
           "title": "Remove legacy .NET Framework",
           "description": ".NET 3.5 (which includes 2.0) supports older, weaker crypto and is rarely needed on modern endpoints.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1655"
           ],
@@ -547,6 +581,7 @@ export const controls: EssentialControl[] = [
           "id": "5-ml1-1",
           "title": "Remove standard users from local Administrators",
           "description": "Day-to-day user accounts must not be members of the local Administrators group on their workstation.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1508"
           ],
@@ -559,6 +594,7 @@ export const controls: EssentialControl[] = [
           "id": "5-ml1-2",
           "title": "Deploy Windows LAPS",
           "description": "Windows LAPS is built into Windows 11 22H2+ and Windows Server 2019+ (via update). It randomises and rotates the local administrator password and stores it in AD or Entra ID.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1685"
           ],
@@ -572,6 +608,7 @@ export const controls: EssentialControl[] = [
           "id": "5-ml1-3",
           "title": "Block internet / email for privileged accounts",
           "description": "Use Group Policy 'Deny logon' rights to prevent admin accounts authenticating to email, web proxy and internet-connected workstations.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1175",
             "ISM-1883"
@@ -591,6 +628,7 @@ export const controls: EssentialControl[] = [
           "id": "5-ml2-1",
           "title": "Enable Credential Guard",
           "description": "Stores derived domain credentials in a virtualisation-based secure container, defeating pass-the-hash and pass-the-ticket attacks.",
+          "osScope": "workstation",
           "ismControls": [
             "ISM-1686"
           ],
@@ -603,6 +641,7 @@ export const controls: EssentialControl[] = [
           "id": "5-ml2-2",
           "title": "Protect LSASS",
           "description": "Run LSASS as a protected process so non-protected processes cannot read its memory.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1861"
           ],
@@ -615,6 +654,7 @@ export const controls: EssentialControl[] = [
           "id": "5-ml2-3",
           "title": "Apply Just Enough Administration (JEA)",
           "description": "JEA exposes only specified PowerShell cmdlets/parameters to delegated administrators via constrained session configurations.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1508"
           ],
@@ -634,6 +674,7 @@ export const controls: EssentialControl[] = [
           "id": "5-ml3-1",
           "title": "Add privileged accounts to Protected Users",
           "description": "Protected Users prevents NTLM authentication, DES/RC4 Kerberos and credential caching for those accounts.",
+          "osScope": "both",
           "ismControls": [],
           "technicalDetails": [
             "PowerShell: Add-ADGroupMember -Identity 'Protected Users' -Members <admin-account>",
@@ -644,6 +685,7 @@ export const controls: EssentialControl[] = [
           "id": "5-ml3-2",
           "title": "Privileged Access Workstation (PAW)",
           "description": "Dedicated hardened workstation, used only for admin tasks, with no email, web or productivity apps. Use Microsoft's PAW reference build (GPO templates).",
+          "osScope": "both",
           "ismControls": [
             "ISM-1898",
             "ISM-1380",
@@ -659,6 +701,7 @@ export const controls: EssentialControl[] = [
           "id": "5-ml3-3",
           "title": "Audit privileged account use",
           "description": "Enable advanced auditing for account logon, account management and sensitive privilege use, and forward to a collector.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1509",
             "ISM-1650"
@@ -684,6 +727,7 @@ export const controls: EssentialControl[] = [
           "id": "6-ml1-1",
           "title": "Configure Windows Update for Business",
           "description": "WUfB delivers quality and feature updates straight from Microsoft, configurable via Group Policy.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1877",
             "ISM-1694",
@@ -698,6 +742,7 @@ export const controls: EssentialControl[] = [
           "id": "6-ml1-2",
           "title": "Enforce a quality-update deadline",
           "description": "A deadline forces a restart after a defined period, so the patch actually takes effect.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1877",
             "ISM-1694",
@@ -712,6 +757,7 @@ export const controls: EssentialControl[] = [
           "id": "6-ml1-3",
           "title": "Inventory OS versions",
           "description": "Identify and replace any out-of-support OS instances.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1807",
             "ISM-1501"
@@ -731,6 +777,7 @@ export const controls: EssentialControl[] = [
           "id": "6-ml2-1",
           "title": "Tighten deferrals and deadlines",
           "description": "Reduce deferral to zero and deadline to two weeks for workstations; tighter still for internet-facing servers.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1877",
             "ISM-1694",
@@ -745,6 +792,7 @@ export const controls: EssentialControl[] = [
           "id": "6-ml2-2",
           "title": "Include driver updates from Windows Update",
           "description": "Windows Update can deliver vendor-signed driver and firmware (DCH) updates.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1697"
           ],
@@ -763,6 +811,7 @@ export const controls: EssentialControl[] = [
           "id": "6-ml3-1",
           "title": "Expedite critical patches",
           "description": "For exploited vulnerabilities, push immediately rather than waiting for the standard ring schedule.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1877",
             "ISM-1696"
@@ -776,6 +825,7 @@ export const controls: EssentialControl[] = [
           "id": "6-ml3-2",
           "title": "Stay on N or N-1 Windows feature releases",
           "description": "Older feature releases reach end-of-servicing and stop receiving security updates. Track and upgrade.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1407",
             "ISM-1501"
@@ -802,6 +852,7 @@ export const controls: EssentialControl[] = [
           "id": "7-ml1-1",
           "title": "Enable Windows Hello for Business",
           "description": "WHfB binds an asymmetric key pair to the TPM, unlocked by PIN or biometric. The factors are 'something you have' (the device/TPM) and 'something you know/are' (PIN/biometric).",
+          "osScope": "both",
           "ismControls": [
             "ISM-0974",
             "ISM-1401"
@@ -816,6 +867,7 @@ export const controls: EssentialControl[] = [
           "id": "7-ml1-2",
           "title": "Enforce PIN complexity",
           "description": "Set minimum PIN length and complexity so the local factor is meaningful.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1401"
           ],
@@ -828,6 +880,7 @@ export const controls: EssentialControl[] = [
           "id": "7-ml1-3",
           "title": "Enable smart-card support for legacy logon",
           "description": "For internet-facing services that don't speak modern auth, AD CS-issued smart cards provide a second factor.",
+          "osScope": "both",
           "ismControls": [
             "ISM-0974",
             "ISM-1682"
@@ -846,6 +899,7 @@ export const controls: EssentialControl[] = [
           "id": "7-ml2-1",
           "title": "Require MFA for all privileged accounts",
           "description": "Force WHfB or smart-card authentication for any account with admin rights; block password-only sign-in.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1173",
             "ISM-1401",
@@ -860,6 +914,7 @@ export const controls: EssentialControl[] = [
           "id": "7-ml2-2",
           "title": "Set SmartcardLogonRequired on admin accounts",
           "description": "AD attribute that forces smart-card / WHfB cert-trust authentication and prevents NTLM password use.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1173",
             "ISM-1682"
@@ -879,6 +934,7 @@ export const controls: EssentialControl[] = [
           "id": "7-ml3-1",
           "title": "Deploy WHfB with certificate trust",
           "description": "Certificate-trust deployment (vs key-trust) issues a smart-card-style cert from AD CS, which is phishing-resistant and works against on-prem AD.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1401",
             "ISM-1682"
@@ -892,6 +948,7 @@ export const controls: EssentialControl[] = [
           "id": "7-ml3-2",
           "title": "Enable FIDO2 security key sign-in",
           "description": "FIDO2 security keys are phishing-resistant and work with WHfB / AD CS in hybrid scenarios.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1682"
           ],
@@ -904,6 +961,7 @@ export const controls: EssentialControl[] = [
           "id": "7-ml3-3",
           "title": "Log and forward authentication events",
           "description": "Windows logs auth events to the Security log; forward them centrally via WEF.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1683"
           ],
@@ -929,6 +987,7 @@ export const controls: EssentialControl[] = [
           "id": "8-ml1-1",
           "title": "Install Windows Server Backup",
           "description": "Built-in image / file backup tool for Windows Server. Free, scriptable, supports VSS-aware applications.",
+          "osScope": "server",
           "ismControls": [
             "ISM-1511",
             "ISM-1811"
@@ -942,6 +1001,7 @@ export const controls: EssentialControl[] = [
           "id": "8-ml1-2",
           "title": "Schedule daily backups",
           "description": "wbadmin can schedule recurring backups; schedule via Task Scheduler for more granular cadence.",
+          "osScope": "server",
           "ismControls": [
             "ISM-1511",
             "ISM-1810",
@@ -956,6 +1016,7 @@ export const controls: EssentialControl[] = [
           "id": "8-ml1-3",
           "title": "Restrict access to backup destinations",
           "description": "NTFS / share permissions on the backup target must exclude ordinary users.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1812",
             "ISM-1814"
@@ -968,6 +1029,7 @@ export const controls: EssentialControl[] = [
           "id": "8-ml1-4",
           "title": "Enable Volume Shadow Copies for file servers",
           "description": "Provides point-in-time snapshots that users can self-restore via 'Previous Versions'.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1511",
             "ISM-1810"
@@ -987,6 +1049,7 @@ export const controls: EssentialControl[] = [
           "id": "8-ml2-1",
           "title": "Separate backup credentials",
           "description": "Backups must run under a dedicated service account that is not a domain administrator and is not used interactively.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1705",
             "ISM-1707"
@@ -1001,6 +1064,7 @@ export const controls: EssentialControl[] = [
           "id": "8-ml2-2",
           "title": "Restrict user access to their own backups",
           "description": "Users should not be able to read, restore, modify or delete their own backups — only authorised restorers should.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1813",
             "ISM-1814"
@@ -1020,6 +1084,7 @@ export const controls: EssentialControl[] = [
           "id": "8-ml3-1",
           "title": "Use ReFS with integrity streams for backup volumes",
           "description": "ReFS detects (and with mirror/parity, corrects) silent corruption of backup data.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1811"
           ],
@@ -1032,6 +1097,7 @@ export const controls: EssentialControl[] = [
           "id": "8-ml3-2",
           "title": "Lock down with role separation",
           "description": "Only the backup administrator role (separate from general Domain / Server Admins) holds modify / delete rights on the backup data.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1705",
             "ISM-1706",
@@ -1047,6 +1113,7 @@ export const controls: EssentialControl[] = [
           "id": "8-ml3-3",
           "title": "Offline / air-gapped copy",
           "description": "Retain at least one copy on offline media (e.g. rotated tape or removable disk) disconnected from the network outside backup windows.",
+          "osScope": "both",
           "ismControls": [
             "ISM-1811"
           ],

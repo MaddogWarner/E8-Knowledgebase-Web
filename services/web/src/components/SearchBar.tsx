@@ -2,11 +2,15 @@ import { Search } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { search } from '../lib/search';
+import { isOSScope } from '../lib/scope';
+import { useLocalStorage } from '../lib/useLocalStorage';
+import type { OSScope } from '../types';
 
 export function SearchBar() {
   const [query, setQuery] = useState('');
+  const [osScope] = useLocalStorage<OSScope>('e8kb.osScope', 'both', isOSScope);
   const navigate = useNavigate();
-  const results = useMemo(() => search(query), [query]);
+  const results = useMemo(() => search(query, osScope), [query, osScope]);
 
   function open(path: string) {
     setQuery('');
@@ -36,4 +40,3 @@ export function SearchBar() {
     </div>
   );
 }
-

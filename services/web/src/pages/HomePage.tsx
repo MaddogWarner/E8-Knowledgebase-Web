@@ -8,10 +8,11 @@ import { resolveIcon } from '../lib/icons';
 import { useProfiles } from '../lib/profiles';
 import { buildReportRows, toCsv } from '../lib/report';
 import { isMaturityLevel } from '../lib/search';
+import { isOSScope, stepsInScope } from '../lib/scope';
 import { compliancePercentage, controlComplete, isStepCompleteOrNotApplicable, isStepDone, levelsUpTo, statusCounts } from '../lib/status';
 import { useLocalStorage } from '../lib/useLocalStorage';
 import { useStepProgress } from '../lib/useStepProgress';
-import type { MaturityLevel, StepStateValue } from '../types';
+import type { MaturityLevel, OSScope, StepStateValue } from '../types';
 
 function isBooleanString(value: string): value is 'true' | 'false' {
   return value === 'true' || value === 'false';
@@ -26,15 +27,16 @@ const printStateLabels: Record<StepStateValue, string> = {
 export function HomePage() {
   const [targetMaturity, setTargetMaturity] = useLocalStorage<MaturityLevel>('e8kb.targetMaturity', 'ml1', isMaturityLevel);
   const [hideComplete, setHideComplete] = useLocalStorage<'true' | 'false'>('e8kb.hideComplete', 'false', isBooleanString);
+  const [osScope] = useLocalStorage<OSScope>('e8kb.osScope', 'both', isOSScope);
   const { evidence } = useEvidence();
   const { status } = useStepProgress();
   const { activeProfile } = useProfiles();
-  const visibleControls = controls.filter((control) => hideComplete !== 'true' || !controlComplete(control, targetMaturity, status, evidence));
+  const visibleControls = controls.filter((control) => hideComplete !== 'true' || !controlComplete(control, targetMaturity, status, evidence, osScope));
   const targetLevels = levelsUpTo(targetMaturity);
-  const allTargetSteps = controls.flatMap((control) => targetLevels.flatMap((level) => getLevelContent(control, level).steps));
+  const allTargetSteps = stepsInScope(controls.flatMap((control) => targetLevels.flatMap((level) => getLevelContent(control, level).steps)), osScope);
   const overallPercentage = compliancePercentage(allTargetSteps, status, evidence);
   const chartRows = controls.map((control) => {
-    const targetSteps = targetLevels.flatMap((level) => getLevelContent(control, level).steps);
+    const targetSteps = stepsInScope(targetLevels.flatMap((level) => getLevelContent(control, level).steps), osScope);
     const counts = statusCounts(targetSteps, status, evidence);
     return {
       id: control.id,
@@ -50,7 +52,7 @@ export function HomePage() {
   }
 
   function exportCsv() {
-    const rows = buildReportRows(controls, targetMaturity, status, evidence, activeProfile.name);
+    const rows = buildReportRows(controls, targetMaturity, status, evidence, activeProfile.name, osScope);
     const blob = new Blob([toCsv(rows)], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -111,11 +113,11 @@ export function HomePage() {
       <section className="control-grid" aria-label="Essential Eight mitigations">
         {visibleControls.map((control) => {
           const Icon = resolveIcon(control.icon);
-          const targetSteps = targetLevels.flatMap((level) => getLevelContent(control, level).steps);
+          const targetSteps = stepsInScope(targetLevels.flatMap((level) => getLevelContent(control, level).steps), osScope);
           const notApplicable = targetSteps.filter((step) => isStepCompleteOrNotApplicable(status(step.id), evidence[step.id]) && !isStepDone(status(step.id), evidence[step.id])).length;
           const total = targetSteps.length - notApplicable;
           const done = targetSteps.filter((step) => isStepDone(status(step.id), evidence[step.id])).length;
-          const complete = controlComplete(control, targetMaturity, status, evidence);
+          const complete = controlComplete(control, targetMaturity, status, evidence, osScope);
           return (
             <Link key={control.id} to={`/control/${control.id}/ml1`} className="control-card">
               <Icon size={26} />
@@ -137,7 +139,7 @@ export function HomePage() {
           <div key={control.id}>
             <h3>{control.id}. {control.name}</h3>
             <ul>
-              {targetLevels.flatMap((level) => getLevelContent(control, level).steps.map((step) => (
+              {targetLevels.flatMap((level) => stepsInScope(getLevelContent(control, level).steps, osScope).map((step) => (
                 <li key={step.id}>
                   <strong>{level.toUpperCase()}:</strong> {step.title} — {printStateLabels[status(step.id).state]}
                 </li>

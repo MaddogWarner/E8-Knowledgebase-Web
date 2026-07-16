@@ -1,10 +1,12 @@
 export type MaturityLevel = 'ml1' | 'ml2' | 'ml3';
 export type MaturityLevelId = MaturityLevel;
+export type OSScope = 'workstation' | 'server' | 'both';
 
 export interface ImplementationStep {
   id: string;
   title: string;
   description: string;
+  osScope: OSScope;
   ismControls: string[];
   technicalDetails: string[];
 }

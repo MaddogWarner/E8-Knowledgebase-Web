@@ -1,6 +1,6 @@
 import { auditPolicyEntries } from '../data/auditPolicy';
 import { controls, getLevelContent, maturityLevels } from '../data/controls';
-import type { MaturityLevel } from '../types';
+import type { MaturityLevel, OSScope } from '../types';
 
 export interface SearchResult {
   id: string;
@@ -11,6 +11,7 @@ export interface SearchResult {
 
 interface SearchDocument extends SearchResult {
   haystack: string;
+  osScope?: OSScope;
 }
 
 const documents: SearchDocument[] = controls.flatMap((control) => {
@@ -39,6 +40,7 @@ const documents: SearchDocument[] = controls.flatMap((control) => {
       title: step.title,
       context: `${control.name} · ${level.toUpperCase()}${step.ismControls.length > 0 ? ` · ${step.ismControls.join(' ')}` : ''}`,
       path: `/control/${control.id}/${level}#${step.id}`,
+      osScope: step.osScope,
       haystack: `${control.name} ${level} ${step.title} ${step.description} ${step.ismControls.join(' ')} ${step.technicalDetails.join(' ')}`.toLowerCase()
     }));
 
@@ -58,7 +60,7 @@ export function isMaturityLevel(value: string | undefined): value is MaturityLev
   return value === 'ml1' || value === 'ml2' || value === 'ml3';
 }
 
-export function search(query: string): SearchResult[] {
+export function search(query: string, scope: OSScope = 'both'): SearchResult[] {
   const terms = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
   if (terms.length === 0) return [];
 
@@ -71,6 +73,7 @@ export function search(query: string): SearchResult[] {
       return { document, score };
     })
     .filter((result) => result.score > 0)
+    .filter(({ document }) => !document.osScope || scope === 'both' || document.osScope === 'both' || document.osScope === scope)
     .sort((a, b) => b.score - a.score)
     .slice(0, 8)
     .map(({ document }) => ({

@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 3.4.0 — 2026-07-16
+
+### Added
+
+- Workstation, Server and Both OS scope filtering on the About page, persisted per environment profile.
+- Scope filtering across compliance dashboards, control pages, search, CSV exports and printable reports, with per-step scope badges.
+
 ## 3.3.1 — 2026-07-08
 
 ### Added

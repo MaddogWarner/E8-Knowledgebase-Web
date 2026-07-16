@@ -1,5 +1,6 @@
 import { getLevelContent } from '../data/controls';
-import type { EssentialControl, ImplementationStep, MaturityLevel, StepStatus } from '../types';
+import type { EssentialControl, ImplementationStep, MaturityLevel, OSScope, StepStatus } from '../types';
+import { stepsInScope } from './scope';
 
 export type Evidence = 'pass' | 'fail' | undefined;
 export type StepDisplayState = 'notApplicable' | 'evidenced' | 'failed' | 'implemented' | 'remaining';
@@ -43,9 +44,10 @@ export function controlComplete(
   control: EssentialControl,
   target: MaturityLevel,
   status: (stepId: string) => StepStatus,
-  evidenceMap: Record<string, 'pass' | 'fail'>
+  evidenceMap: Record<string, 'pass' | 'fail'>,
+  scope: OSScope
 ): boolean {
-  const targetSteps = levelsUpTo(target).flatMap((level) => getLevelContent(control, level).steps);
+  const targetSteps = stepsInScope(levelsUpTo(target).flatMap((level) => getLevelContent(control, level).steps), scope);
   return targetSteps.length > 0 && targetSteps.every((step) => isStepCompleteOrNotApplicable(status(step.id), evidenceMap[step.id]));
 }
 
