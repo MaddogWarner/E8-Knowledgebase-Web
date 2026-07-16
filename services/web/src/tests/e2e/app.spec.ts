@@ -229,3 +229,38 @@ test('home compliance chart rows link to control ML1 pages', async ({ page }) =>
   await expect(page).toHaveURL(/\/control\/3\/ml1/);
   await expect(page.getByRole('heading', { name: 'Configure MS Office Macros' })).toBeVisible();
 });
+
+test('OS scope filters controls, dashboard totals and persists per profile', async ({ page }) => {
+  await page.goto('/');
+  const bothPatchTotal = await page.locator('.control-grid').getByRole('link', { name: /Mitigation 2 Patch Applications/ }).locator('.card-progress').innerText();
+
+  await page.getByRole('link', { name: /About & Privacy/ }).click();
+  await page.getByRole('radio', { name: 'Server', exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'Server', exact: true })).toHaveAttribute('aria-checked', 'true');
+
+  await page.getByRole('link', { name: 'Mitigation 3 Configure MS Office Macros', exact: true }).click();
+  await expect(page.getByText('No steps in this maturity level apply to the selected OS scope. Change it on the About page.')).toBeVisible();
+
+  await page.getByRole('link', { name: 'Mitigation 8 Regular Backups', exact: true }).click();
+  await expect(page.locator('.step-scope-badge', { hasText: 'Server' })).toHaveCount(2);
+  await expect(page.locator('[id="8-ml1-1"] .step-number')).toHaveText('1');
+  await expect(page.locator('[id="8-ml1-2"] .step-number')).toHaveText('2');
+
+  await page.getByRole('link', { name: 'Essential 8 Knowledge Base' }).click();
+  const serverPatchTotal = await page.locator('.control-grid').getByRole('link', { name: /Mitigation 2 Patch Applications/ }).locator('.card-progress').innerText();
+  expect(serverPatchTotal).not.toBe(bothPatchTotal);
+
+  await page.getByRole('button', { name: /Profile Default/ }).click();
+  await page.getByLabel('New profile name').fill('Workstations');
+  await page.getByRole('button', { name: 'Add' }).click();
+  await page.getByRole('link', { name: /About & Privacy/ }).click();
+  await expect(page.getByRole('radio', { name: 'Both', exact: true })).toHaveAttribute('aria-checked', 'true');
+
+  await page.getByRole('button', { name: /Profile Workstations/ }).click();
+  await page.getByRole('button', { name: 'Default', exact: true }).click();
+  await expect(page.getByRole('radio', { name: 'Server', exact: true })).toHaveAttribute('aria-checked', 'true');
+
+  await page.getByRole('radio', { name: 'Both', exact: true }).click();
+  await page.getByRole('link', { name: 'Mitigation 3 Configure MS Office Macros', exact: true }).click();
+  await expect(page.locator('.steps-list .step-card')).toHaveCount(3);
+});

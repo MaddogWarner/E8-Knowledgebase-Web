@@ -1,5 +1,6 @@
 import { getLevelContent } from '../data/controls';
-import type { EssentialControl, MaturityLevel, StepStatus } from '../types';
+import type { EssentialControl, MaturityLevel, OSScope, StepStatus } from '../types';
+import { stepsInScope } from './scope';
 import { classifyStep, compliancePercentage, levelsUpTo } from './status';
 
 export interface ReportRow {
@@ -45,15 +46,16 @@ export function buildReportRows(
   target: MaturityLevel,
   status: (stepId: string) => StepStatus,
   evidenceMap: Record<string, 'pass' | 'fail'>,
-  profile = 'Default'
+  profile = 'Default',
+  scope: OSScope = 'both'
 ): ReportRow[] {
   const generatedDate = new Date().toISOString();
 
   return controls.flatMap((control) => {
-    const targetSteps = levelsUpTo(target).flatMap((level) => getLevelContent(control, level).steps);
+    const targetSteps = stepsInScope(levelsUpTo(target).flatMap((level) => getLevelContent(control, level).steps), scope);
     const controlPercent = compliancePercentage(targetSteps, status, evidenceMap).toString();
 
-    return levelsUpTo(target).flatMap((level) => getLevelContent(control, level).steps.map((step) => {
+    return levelsUpTo(target).flatMap((level) => stepsInScope(getLevelContent(control, level).steps, scope).map((step) => {
       const stepStatus = status(step.id);
       const evidence = evidenceMap[step.id] ?? '';
       const classified = classifyStep(stepStatus, evidenceMap[step.id]);

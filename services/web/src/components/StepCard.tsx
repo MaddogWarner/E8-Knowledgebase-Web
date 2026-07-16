@@ -44,6 +44,7 @@ export function StepCard({ step, index }: StepCardProps) {
       <div className="step-content">
         <div className="step-title-row">
           <h3>{step.title}</h3>
+          {step.osScope !== 'both' && <span className="step-scope-badge" aria-label={`OS scope: ${step.osScope}`}>{step.osScope[0].toUpperCase() + step.osScope.slice(1)}</span>}
           {statusLabel && <span className={`status-badge ${state}`}>{statusLabel}</span>}
         </div>
         {step.ismControls.length > 0 && (

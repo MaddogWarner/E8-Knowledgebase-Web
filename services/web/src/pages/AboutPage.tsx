@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { appInfo } from '../data/appInfo';
 import { useProfiles } from '../lib/profiles';
-import type { ReferenceLink } from '../types';
+import { isOSScope } from '../lib/scope';
+import { useLocalStorage } from '../lib/useLocalStorage';
+import type { OSScope, ReferenceLink } from '../types';
 
 // Defined here rather than in appInfo.ts, which is generator-owned.
 const buildLinks: ReferenceLink[] = [
@@ -32,6 +34,7 @@ function LinkList({ links }: { links: ReferenceLink[] }) {
 export function AboutPage() {
   const { activeProfile, resetActiveProfile, resetAllAppData } = useProfiles();
   const [confirming, setConfirming] = useState<'profile' | 'all' | null>(null);
+  const [osScope, setOsScope] = useLocalStorage<OSScope>('e8kb.osScope', 'both', isOSScope);
 
   function confirmReset() {
     if (confirming === 'profile') resetActiveProfile();
@@ -45,6 +48,19 @@ export function AboutPage() {
         <h1>{appInfo.aboutTitle}</h1>
         <p>{appInfo.aboutDescription}</p>
         <p>{appInfo.contentScope}</p>
+      </section>
+
+      <section className="content-section preferences-section">
+        <h2>Preferences</h2>
+        <h3>OS scope</h3>
+        <div className="scope-segmented-control" role="radiogroup" aria-label="OS scope">
+          {(['workstation', 'server', 'both'] as const).map((scope) => (
+            <button key={scope} type="button" role="radio" aria-checked={osScope === scope} className={osScope === scope ? 'active' : ''} onClick={() => setOsScope(scope)}>
+              {scope[0].toUpperCase() + scope.slice(1)}
+            </button>
+          ))}
+        </div>
+        <p>OS scope hides implementation steps that don't apply to the selected environment and recalculates compliance over the remaining steps.</p>
       </section>
 
       <section className="content-section">
@@ -62,7 +78,7 @@ export function AboutPage() {
       <section className="content-section reset-section">
         <h2>Reset app data</h2>
         <p>
-          Clear implementation tracking, N/A reasons, Microsoft 365 licence mode, target maturity and hide-completed preferences. Theme preference is retained.
+          Clear implementation tracking, N/A reasons, Microsoft 365 licence mode, target maturity, hide-completed and OS scope preferences. Theme preference is retained.
         </p>
         <div className="reset-actions">
           <button type="button" className="print-button danger" onClick={() => setConfirming('profile')}>Reset this profile</button>

@@ -49,9 +49,18 @@ describe('status helpers', () => {
     const ml1StepIds = control.ml1.steps.map((step) => step.id);
     const statuses = Object.fromEntries(ml1StepIds.map((stepId) => [stepId, implemented])) as Record<string, StepStatus>;
 
-    expect(controlComplete(control, 'ml1', (stepId) => statuses[stepId] ?? notImplemented, {})).toBe(true);
-    expect(controlComplete(control, 'ml2', (stepId) => statuses[stepId] ?? notImplemented, {})).toBe(false);
-    expect(controlComplete(control, 'ml1', (stepId) => statuses[stepId] ?? notImplemented, { [ml1StepIds[0]]: 'fail' })).toBe(false);
-    expect(controlComplete(control, 'ml1', () => notApplicable, {})).toBe(true);
+    expect(controlComplete(control, 'ml1', (stepId) => statuses[stepId] ?? notImplemented, {}, 'both')).toBe(true);
+    expect(controlComplete(control, 'ml2', (stepId) => statuses[stepId] ?? notImplemented, {}, 'both')).toBe(false);
+    expect(controlComplete(control, 'ml1', (stepId) => statuses[stepId] ?? notImplemented, { [ml1StepIds[0]]: 'fail' }, 'both')).toBe(false);
+    expect(controlComplete(control, 'ml1', () => notApplicable, {}, 'both')).toBe(true);
+  });
+
+  it('checks completion over only the selected OS scope', () => {
+    const control = controls[1];
+    const commonStepIds = control.ml1.steps.filter((step) => step.osScope === 'both').map((step) => step.id);
+    const statuses = Object.fromEntries(commonStepIds.map((stepId) => [stepId, implemented])) as Record<string, StepStatus>;
+
+    expect(controlComplete(control, 'ml1', (stepId) => statuses[stepId] ?? notImplemented, {}, 'server')).toBe(true);
+    expect(controlComplete(control, 'ml1', (stepId) => statuses[stepId] ?? notImplemented, {}, 'both')).toBe(false);
   });
 });

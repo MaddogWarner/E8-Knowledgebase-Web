@@ -11,10 +11,11 @@ import { useEvidence } from '../lib/EvidenceContext';
 import { resolveIcon } from '../lib/icons';
 import { isLicenseMode } from '../lib/license';
 import { isMaturityLevel } from '../lib/search';
+import { isOSScope, stepsInScope } from '../lib/scope';
 import { classifyStep, isStepCompleteOrNotApplicable, isStepDone, statusCounts } from '../lib/status';
 import { useLocalStorage } from '../lib/useLocalStorage';
 import { useStepProgress } from '../lib/useStepProgress';
-import type { MaturityLevel, Microsoft365LicenseMode } from '../types';
+import type { MaturityLevel, Microsoft365LicenseMode, OSScope } from '../types';
 import type { StepDisplayState } from '../lib/status';
 
 export function ControlPage() {
@@ -25,6 +26,7 @@ export function ControlPage() {
   const activeLevel = isMaturityLevel(level) ? level : 'ml1';
   const [licenseMode] = useLocalStorage<Microsoft365LicenseMode>('e8kb.licenseMode', 'none', isLicenseMode);
   const [targetMaturity] = useLocalStorage<MaturityLevel>('e8kb.targetMaturity', 'ml1', isMaturityLevel);
+  const [osScope] = useLocalStorage<OSScope>('e8kb.osScope', 'both', isOSScope);
   const { evidence } = useEvidence();
   const { status } = useStepProgress();
   const [activeFilters, setActiveFilters] = useState<StepDisplayState[]>([]);
@@ -45,15 +47,16 @@ export function ControlPage() {
 
   const Icon = resolveIcon(control.icon);
   const content = getLevelContent(control, activeLevel);
-  const allSteps = maturityLevels.flatMap(({ id: maturityLevel }) => getLevelContent(control, maturityLevel).steps);
+  const allSteps = stepsInScope(maturityLevels.flatMap(({ id: maturityLevel }) => getLevelContent(control, maturityLevel).steps), osScope);
+  const scopedLevelSteps = stepsInScope(content.steps, osScope);
   const progressCounts = statusCounts(allSteps, status, evidence);
-  const levelNotApplicable = content.steps.filter((step) => isStepCompleteOrNotApplicable(status(step.id), evidence[step.id]) && !isStepDone(status(step.id), evidence[step.id])).length;
-  const levelTotal = content.steps.length - levelNotApplicable;
-  const levelDone = content.steps.filter((step) => isStepDone(status(step.id), evidence[step.id])).length;
+  const levelNotApplicable = scopedLevelSteps.filter((step) => isStepCompleteOrNotApplicable(status(step.id), evidence[step.id]) && !isStepDone(status(step.id), evidence[step.id])).length;
+  const levelTotal = scopedLevelSteps.length - levelNotApplicable;
+  const levelDone = scopedLevelSteps.filter((step) => isStepDone(status(step.id), evidence[step.id])).length;
   const beyondTarget = maturityLevels.findIndex((item) => item.id === activeLevel) > maturityLevels.findIndex((item) => item.id === targetMaturity);
   const visibleSteps = activeFilters.length === 0
-    ? content.steps
-    : content.steps.filter((step) => activeFilters.includes(classifyStep(status(step.id), evidence[step.id])));
+    ? scopedLevelSteps
+    : scopedLevelSteps.filter((step) => activeFilters.includes(classifyStep(status(step.id), evidence[step.id])));
 
   function toggleFilter(state: StepDisplayState) {
     setActiveFilters((current) => current.includes(state)
@@ -97,14 +100,16 @@ export function ControlPage() {
         <p className="level-progress">{activeLevel.toUpperCase()} · {levelDone}/{levelTotal} steps implemented</p>
         {activeFilters.length > 0 && (
           <div className="filter-summary">
-            <span>Showing {visibleSteps.length} of {content.steps.length} steps</span>
+            <span>Showing {visibleSteps.length} of {scopedLevelSteps.length} steps</span>
             <button type="button" onClick={() => setActiveFilters([])}>Clear filters</button>
           </div>
         )}
         <div className="steps-list">
-          {visibleSteps.length > 0
+          {scopedLevelSteps.length === 0
+            ? <p className="empty-state">No steps in this maturity level apply to the selected OS scope. Change it on the About page.</p>
+            : visibleSteps.length > 0
             ? visibleSteps.map((step) => (
-                <StepCard key={step.id} step={step} index={content.steps.indexOf(step)} />
+                <StepCard key={step.id} step={step} index={scopedLevelSteps.indexOf(step)} />
               ))
             : <p className="empty-state">No steps in this maturity level match the selected filters.</p>}
         </div>

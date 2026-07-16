@@ -22,9 +22,17 @@ describe('controls data', () => {
           expect(step.title).toBeTruthy();
           expect(step.description).toBeTruthy();
           expect(Array.isArray(step.ismControls)).toBe(true);
+          expect(['workstation', 'server', 'both']).toContain(step.osScope);
         }
       }
     }
+  });
+
+  it('contains the generated OS scope distribution', () => {
+    const steps = controls.flatMap((control) => (['ml1', 'ml2', 'ml3'] as const).flatMap((level) => control[level].steps));
+    expect(steps.filter((step) => step.osScope === 'workstation')).toHaveLength(16);
+    expect(steps.filter((step) => step.osScope === 'server').map((step) => step.id)).toEqual(['8-ml1-1', '8-ml1-2']);
+    expect(steps.filter((step) => step.osScope === 'both')).toHaveLength(49);
   });
 
   it('contains verified ISM mappings for 64 implementation steps', () => {

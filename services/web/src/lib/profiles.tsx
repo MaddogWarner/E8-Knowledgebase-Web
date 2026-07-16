@@ -24,8 +24,8 @@ const activeProfileKey = 'e8kb.activeProfile';
 export const profileEvent = 'e8kb.profile.changed';
 export const storageEvent = 'e8kb.localStorage.changed';
 
-const scopedKeyNames = new Set(['stepProgressDict', 'targetMaturity', 'hideComplete', 'licenseMode']);
-const unscopedKeys = ['e8kb.stepProgressDict', 'e8kb.progress', 'e8kb.targetMaturity', 'e8kb.hideComplete', 'e8kb.licenseMode'];
+const scopedKeyNames = new Set(['stepProgressDict', 'targetMaturity', 'hideComplete', 'licenseMode', 'osScope']);
+const unscopedKeys = ['e8kb.stepProgressDict', 'e8kb.progress', 'e8kb.targetMaturity', 'e8kb.hideComplete', 'e8kb.licenseMode', 'e8kb.osScope'];
 
 const ProfilesContext = createContext<ProfilesContextValue | null>(null);
 

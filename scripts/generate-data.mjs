@@ -185,6 +185,7 @@ function stepFromCall(call, controlId, level, index) {
     id: `${controlId}-${level}-${index + 1}`,
     title: call.args.title,
     description: call.args.description,
+    osScope: (call.args.osScope?.name ?? '.both').replace(/^\./, ''),
     ismControls: call.args.ismControls ?? [],
     technicalDetails: call.args.technicalDetails
   };
