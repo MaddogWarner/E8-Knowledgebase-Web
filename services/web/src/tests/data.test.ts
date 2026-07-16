@@ -79,10 +79,13 @@ describe('app information', () => {
     const urls = appInfo.referenceLinks.map((link) => link.url);
     expect(urls.every((url) => url.startsWith('https://'))).toBe(true);
     expect(new Set(urls).size).toBe(urls.length);
-    expect(urls.some((url) => url.includes('cyber.gov.au') && url.includes('essential-eight'))).toBe(true);
-    expect(urls.some((url) => url.includes('cyber.gov.au') && url.includes('ism'))).toBe(true);
-    expect(urls.some((url) => url.includes('learn.microsoft.com') && url.includes('defender-endpoint'))).toBe(true);
-    expect(urls.some((url) => url.includes('conditional-access'))).toBe(true);
+    // Check the parsed host, not a whole-URL substring, so the assertions
+    // can't pass on a lookalike host (e.g. cyber.gov.au.evil.example).
+    const parsed = urls.map((url) => new URL(url));
+    expect(parsed.some((url) => url.hostname === 'www.cyber.gov.au' && url.pathname.includes('essential-eight'))).toBe(true);
+    expect(parsed.some((url) => url.hostname === 'www.cyber.gov.au' && url.pathname.includes('ism'))).toBe(true);
+    expect(parsed.some((url) => url.hostname === 'learn.microsoft.com' && url.pathname.includes('defender-endpoint'))).toBe(true);
+    expect(parsed.some((url) => url.hostname === 'learn.microsoft.com' && url.pathname.includes('conditional-access'))).toBe(true);
   });
 });
 

@@ -4,6 +4,12 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 3.4.1 — 2026-07-16
+
+### Fixed
+
+- Hardened a reference-link test assertion to check the parsed URL host instead of a whole-URL substring, resolving CodeQL alert `js/incomplete-url-substring-sanitization`. Test-only change; no application behaviour is affected.
+
 ## 3.4.0 — 2026-07-16
 
 ### Added
