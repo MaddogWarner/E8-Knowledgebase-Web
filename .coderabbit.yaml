@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-AU
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  poem: false
+  path_filters:
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/playwright-report/**"
+    - "!**/test-results/**"
+  auto_review:
+    enabled: true
+    drafts: false
+  tools:
+    eslint:
+      enabled: false
+    gitleaks:
+      enabled: false
+    osvScanner:
+      enabled: false
+    semgrep:
+      enabled: false
+    trivy:
+      enabled: false
