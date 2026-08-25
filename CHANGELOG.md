@@ -4,6 +4,23 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 3.4.2 — 2026-08-24
+
+### Security
+
+- `js-yaml` 4.2.0 → 4.3.1, closing the advisory for the previous range (#39).
+- `nanoid` forced to `>=3.3.18` via an npm `overrides` entry, closing a high-severity
+  advisory. It is a transitive dependency of `vite` → `postcss`, so the override is the
+  only way to raise it without waiting upstream. Not declared as a direct dependency,
+  since the application does not import it.
+- `brace-expansion` and `postcss` (8.5.15 → 8.5.25) updated (#38, #37).
+- `react-router` 7.16.0 → 7.18.2 (#34).
+
+### Changed
+
+- Re-enabled CodeRabbit gitleaks secret scanning and added advisory CodeRabbit
+  configuration (#32, #31).
+
 ## 3.4.1 — 2026-07-16
 
 ### Fixed
