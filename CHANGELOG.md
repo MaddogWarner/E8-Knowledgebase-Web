@@ -4,9 +4,12 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
-## 3.4.2 — 2026-08-24
+## 3.4.2 — 2026-08-29
 
 ### Security
+
+- `openssl`, `libcrypto3` and `libssl3` raised from 3.5.7-r0 to 3.5.8-r0. The web image installed openssl without ever upgrading, so it shipped whatever `nginx:alpine` carried (#41).
+- The runtime stage is excluded from the build cache. Without this, a cached layer replays the `apk upgrade` result and silently reintroduces stale packages whenever a CVE lands without a source change. Both the scan build and the push build skip the cache for that stage, which also guarantees the image that is pushed is the one that was scanned (#41).
 
 - `js-yaml` 4.2.0 → 4.3.1, closing the advisory for the previous range (#39).
 - `nanoid` forced to `>=3.3.18` via an npm `overrides` entry, closing a high-severity
