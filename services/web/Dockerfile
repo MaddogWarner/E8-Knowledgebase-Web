@@ -8,7 +8,8 @@ RUN npm run build
 
 FROM nginx:alpine
 
-RUN apk add --no-cache openssl
+RUN apk upgrade --no-cache \
+    && apk add --no-cache openssl
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY nginx/nginx.conf /etc/nginx/nginx.conf
 COPY nginx/entrypoint.sh /entrypoint.sh
