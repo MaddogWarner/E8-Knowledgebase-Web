@@ -1,6 +1,7 @@
+import { techniquesForControl } from '../lib/attack';
 import { Printer } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { Navigate, useLocation, useParams } from 'react-router';
+import { Link, Navigate, useLocation, useParams } from 'react-router';
 import { GapNote } from '../components/GapNote';
 import { M365Additions } from '../components/M365Additions';
 import { MaturityTabs } from '../components/MaturityTabs';
@@ -87,6 +88,7 @@ export function ControlPage() {
         <p>{control.ml0Description}</p>
       </section>
 
+      <Link className="threat-coverage-link" to={`/attack?control=${id}`}>Threat Coverage · {techniquesForControl(id, targetMaturity, osScope).length} ATT&CK techniques mapped</Link>
       <ProgressBar {...progressCounts} activeFilters={activeFilters} onToggleFilter={toggleFilter} />
 
       <MaturityTabs controlId={control.id} activeLevel={activeLevel} />

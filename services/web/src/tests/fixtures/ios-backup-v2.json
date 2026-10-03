@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 2,
+  "appVersion": "1.8",
+  "exportedAt": "2026-10-03T01:02:03Z",
+  "profiles": [{
+    "id": "AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE",
+    "name": "Default",
+    "createdAt": "2026-07-13T00:00:00Z",
+    "stepProgress": {
+      "1-1-0": {"state": "Implemented"},
+      "1-1-1": {"state": "Not Applicable", "reason": "  No scope  "},
+      "8-3-2": {"state": "Implemented"}
+    },
+    "auditTrail": {"1-1-0": [{
+      "id": "BBBBBBBB-CCCC-DDDD-EEEE-FFFFFFFFFFFF",
+      "timestamp": "2026-10-03T01:00:00Z",
+      "previousState": "Not Implemented",
+      "newState": "Implemented",
+      "note": "  Enabled service  "
+    }]},
+    "targetMaturityLevelRaw": 3,
+    "osScopeFilterRaw": "both",
+    "microsoft365LicenseModeRaw": "e5"
+  }],
+  "globalSettings": null
+}

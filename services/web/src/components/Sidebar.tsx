@@ -57,6 +57,7 @@ export function Sidebar() {
           <Info size={18} />
           <span>About & Privacy</span>
         </NavLink>
+        <NavLink to="/attack" className="nav-item"><ShieldCheck size={18} /><span>MITRE ATT&CK® Coverage</span></NavLink>
       </nav>
       <section className="profile-switcher">
         <button type="button" className="profile-current" onClick={() => setExpanded((current) => !current)}>

@@ -69,10 +69,10 @@ describe('audit policy data', () => {
 
 describe('app information', () => {
   it('contains expected privacy and reference information', () => {
-    expect(appInfo.privacyPolicy).toContain('does not collect');
+    expect(appInfo.privacyPolicy).toContain('no accounts, no analytics, and makes no network requests of its own');
     expect(appInfo.privacyPolicy).toContain('microphone');
     expect(appInfo.privacyPolicy).toContain('camera');
-    expect(appInfo.privacyPolicy).toContain('location services');
+    expect(appInfo.privacyPolicy).toContain('location');
     expect(appInfo.aboutDescription).toContain('administrators');
     expect(appInfo.aboutDescription).toContain('quick reference');
 

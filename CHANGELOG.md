@@ -4,6 +4,27 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## 3.5.0 — 2026-10-03
+
+### Added
+
+- Optional global Deep Audit Mode with per-profile status history, optional notes and a 200-entry limit per step.
+- Backup & Restore for one or all profiles, with strict validation, a 5 MB safety limit and confirmation before replacing browser data. Exports use iOS schema v2, whole-second UTC dates and reversible zero-based iOS / one-based web step-ID conversions; v1 iOS backups remain importable. CSV evidence and theme settings are excluded.
+- Generator-derived MITRE ATT&CK® mappings for 35 techniques and 65 steps, technique dialogs, coverage by target maturity and OS scope, control links and technique/mapping-note search. Coverage includes CSV evidence using the dashboard's existing precedence.
+
+### Changed
+
+- About-page MITRE notices, reference links and About Me wording match the Swift source; privacy copy describes browser storage, explicit exports and in-memory CSV processing.
+- Profiles record their creation date, with a one-time backfill for existing profiles. N/A reasons and audit notes share a 2,000-character limit.
+
+### Fixed
+
+- Backups record the running app version instead of a hardcoded value, never export a step whose stored state is unrecognised, and fall back to the web default target (ML1) when an imported value is unknown.
+
+### Security
+
+- Development-only dependencies updated to close new advisories: `brace-expansion` 1.1.18 → 1.1.21 and 5.0.9 → 5.0.12, `js-yaml` 4.3.1 → 4.3.2 (#44), `vitest`/`@vitest/mocker` 4.1.8 → 4.1.11 (#43). None ship in the production image.
+
 ## 3.4.2 — 2026-08-29
 
 ### Security

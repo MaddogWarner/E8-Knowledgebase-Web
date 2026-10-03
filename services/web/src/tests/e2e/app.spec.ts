@@ -24,7 +24,7 @@ test('core navigation, maturity tabs, M365 additions and about page work', async
   await expect(page.getByText(/E5 identity and cloud-app signal integration/)).toBeVisible();
 
   await page.getByRole('link', { name: /About & Privacy/ }).click();
-  await expect(page.getByText(/does not collect, record, store, transmit, or share any user data/)).toBeVisible();
+  await expect(page.getByText(/no accounts, no analytics, and makes no network requests of its own/)).toBeVisible();
 });
 
 test('deep links, search, copy and dark mode work', async ({ page, context }) => {

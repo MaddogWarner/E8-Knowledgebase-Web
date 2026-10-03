@@ -1,3 +1,4 @@
+import { BackupSection } from '../components/BackupSection';
 import { useState } from 'react';
 import { appInfo } from '../data/appInfo';
 import { useProfiles } from '../lib/profiles';
@@ -34,6 +35,7 @@ function LinkList({ links }: { links: ReferenceLink[] }) {
 export function AboutPage() {
   const { activeProfile, resetActiveProfile, resetAllAppData } = useProfiles();
   const [confirming, setConfirming] = useState<'profile' | 'all' | null>(null);
+  const [deepAudit, setDeepAudit] = useLocalStorage<'true' | 'false'>('e8kb.deepAudit', 'false', isBooleanString);
   const [osScope, setOsScope] = useLocalStorage<OSScope>('e8kb.osScope', 'both', isOSScope);
 
   function confirmReset() {
@@ -52,6 +54,8 @@ export function AboutPage() {
 
       <section className="content-section preferences-section">
         <h2>Preferences</h2>
+        <label className="deep-audit-toggle"><input type="checkbox" checked={deepAudit === 'true'} onChange={(event) => setDeepAudit(event.target.checked ? 'true' : 'false')} /> Deep Audit Mode</label>
+        <p>Deep Audit Mode records a timestamped, optionally-annotated history for every status change in the active profile.</p>
         <h3>OS scope</h3>
         <div className="scope-segmented-control" role="radiogroup" aria-label="OS scope">
           {(['workstation', 'server', 'both'] as const).map((scope) => (
@@ -75,10 +79,14 @@ export function AboutPage() {
         <LinkList links={[appInfo.privacyPolicyLink]} />
       </section>
 
+      <section className="content-section"><h2>MITRE ATT&CK®</h2>
+        <p>{appInfo.attackDisclaimer}</p><p>{appInfo.attackCoverageCaveat}</p><p>{appInfo.attackVersionNote}</p><p>{appInfo.attackAttribution}</p>
+      </section>
+      <BackupSection />
       <section className="content-section reset-section">
         <h2>Reset app data</h2>
         <p>
-          Clear implementation tracking, N/A reasons, Microsoft 365 licence mode, target maturity, hide-completed and OS scope preferences. Theme preference is retained.
+          Clear implementation tracking, N/A reasons, Microsoft 365 licence mode, target maturity, hide-completed and OS scope preferences, and audit history. Deleting all app data also resets Deep Audit Mode. Theme preference is retained.
         </p>
         <div className="reset-actions">
           <button type="button" className="print-button danger" onClick={() => setConfirming('profile')}>Reset this profile</button>
@@ -119,4 +127,8 @@ export function AboutPage() {
 function formatBuildDate(isoDate: string): string {
   const [year, month, day] = isoDate.split('-');
   return `${day}/${month}/${year}`;
+}
+
+function isBooleanString(value: string): value is 'true' | 'false' {
+  return value === 'true' || value === 'false';
 }

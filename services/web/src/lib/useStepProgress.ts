@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { readAudit, recordAudit, trimNote } from './audit';
 import type { StepStatus } from '../types';
 import { useProfiles } from './profiles';
 
@@ -15,7 +16,7 @@ function sanitiseStatus(value: unknown): StepStatus | null {
 
   if (status.state === 'implemented') return { state: 'implemented' };
   if (status.state === 'notApplicable') {
-    const reason = typeof status.reason === 'string' ? status.reason.trim() : '';
+    const reason = typeof status.reason === 'string' ? trimNote(status.reason) ?? '' : '';
     return reason ? { state: 'notApplicable', reason } : { state: 'notApplicable' };
   }
   if (status.state === 'notImplemented') return null;
@@ -69,7 +70,7 @@ function migrateLegacyProgress(dictKey: string) {
 
 export function useStepProgress(): {
   status: (stepId: string) => StepStatus;
-  setStatus: (stepId: string, status: StepStatus) => void;
+  setStatus: (stepId: string, status: StepStatus, note?: string) => void;
   resetAll: () => void;
 } {
   const { storageKey } = useProfiles();
@@ -103,9 +104,14 @@ export function useStepProgress(): {
     window.dispatchEvent(new Event(progressEvent));
   }
 
-  function setStepStatus(stepId: string, nextStatus: StepStatus) {
+  function setStepStatus(stepId: string, nextStatus: StepStatus, note?: string) {
     const next = { ...readProgress(dictKey) };
+    const previous = next[stepId]?.state ?? 'notImplemented';
     const sanitised = sanitiseStatus(nextStatus);
+    const trailKey = storageKey('e8kb.auditTrail');
+    const trail = readAudit(trailKey);
+    const updated = recordAudit(trail, stepId, previous, sanitised ?? defaultStatus, localStorage.getItem('e8kb.deepAudit') === 'true', note);
+    if (updated !== trail) localStorage.setItem(trailKey, JSON.stringify(updated));
     if (!sanitised) {
       delete next[stepId];
     } else {

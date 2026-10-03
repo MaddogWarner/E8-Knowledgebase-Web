@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import { iosToWebStepId } from '../services/web/src/lib/stepIds.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -24,10 +25,17 @@ const swiftFileRoot = await fs.access(path.join(swiftRoot, 'EssentialControlsDat
 const controlsSwift = await fs.readFile(`${swiftFileRoot}/EssentialControlsData.swift`, 'utf8');
 const m365Swift = await fs.readFile(`${swiftFileRoot}/Microsoft365AdditionalControlsData.swift`, 'utf8');
 const appSwift = await fs.readFile(`${swiftFileRoot}/AppInformation.swift`, 'utf8');
+const catalogueSwift = await fs.readFile(`${swiftFileRoot}/ATTACKCatalogue.swift`, 'utf8');
+const mappingSwift = await fs.readFile(`${swiftFileRoot}/ATTACKMappingData.swift`, 'utf8');
+const attackModelSwift = await fs.readFile(`${swiftFileRoot}/ATTACKTechnique.swift`, 'utf8');
 const auditPolicySwift = await fs.readFile(`${swiftFileRoot}/WindowsAuditPolicyData.swift`, 'utf8');
 
 function skipWs(source, index) {
-  while (/\s/.test(source[index] ?? '')) index += 1;
+  while (index < source.length) {
+    if (/\s/.test(source[index])) index += 1;
+    else if (source.startsWith('//', index)) index = source.indexOf('\n', index) < 0 ? source.length : source.indexOf('\n', index) + 1;
+    else break;
+  }
   return index;
 }
 
@@ -335,10 +343,22 @@ await fs.writeFile(
 );
 
 function swiftConst(name) {
-  const match = appSwift.match(new RegExp(`static let ${name}(?:: [^=]+)? = "([\\s\\S]*?)"`));
+  const match = appSwift.match(new RegExp(`static let ${name}(?:: [^=]+)? =\\s*`));
   if (!match) throw new Error(`Missing ${name}`);
-  return match[1];
+  const [value] = parseValue(appSwift, match.index + match[0].length);
+  const resolved = value.replace(/\\\(ATTACKCatalogue\.(\w+)\)/g, (_, key) => {
+    const match = catalogueSwift.match(new RegExp(`static let ${key} = "([^"]+)"`));
+    if (!match) throw new Error(`Unresolved ATT&CK constant: ${key}`);
+    return match[1];
+  });
+  if (resolved.includes('\\(')) throw new Error(`Unresolved Swift interpolation: ${name}`);
+  return webOverrides[name] ?? resolved;
 }
+
+// Web-specific: the iOS wording refers to device storage/system backup.
+const webOverrides = {
+  privacyPolicy: "Essential 8 Knowledge Base has no accounts, no analytics, and makes no network requests of its own — nothing you enter is ever sent to the developer or any third party. Your assessment progress, notes and audit history are stored only in this browser's local storage. That data leaves the browser only if you export a backup or report yourself. Uploaded audit CSV files are processed in memory and are never stored. External reference links open in a new tab. The app does not request access to the microphone, camera, location, or other device sensors."
+};
 
 function parseLinks(arrayName) {
   const start = appSwift.indexOf(`static let ${arrayName}`);
@@ -374,7 +394,38 @@ const referenceLinks = [
 
 await fs.writeFile(
   out('data/appInfo.ts'),
-  `import type { ReferenceLink } from '../types';\n\nexport const appInfo = {\n  aboutTitle: ${JSON.stringify(swiftConst('aboutTitle'))},\n  aboutDescription: ${JSON.stringify(swiftConst('aboutDescription'))},\n  contentScope: ${JSON.stringify(swiftConst('contentScope'))},\n  aboutMeTitle: ${JSON.stringify(swiftConst('aboutMeTitle'))},\n  aboutMeDescription: ${JSON.stringify(swiftConst('aboutMeDescription'))},\n  authorLinks: ${JSON.stringify(parseLinks('authorLinks'), null, 2)} satisfies ReferenceLink[],\n  privacyTitle: ${JSON.stringify(swiftConst('privacyTitle'))},\n  privacyPolicy: ${JSON.stringify(swiftConst('privacyPolicy'))},\n  privacyPolicyLink: ${JSON.stringify({ title: privacyLink[1], url: privacyLink[2] }, null, 2)} satisfies ReferenceLink,\n  referenceLinks: ${JSON.stringify(referenceLinks, null, 2)} satisfies ReferenceLink[]\n};\n`
+  `import type { ReferenceLink } from '../types';\n\nexport const appInfo = {\n  aboutTitle: ${JSON.stringify(swiftConst('aboutTitle'))},\n  aboutDescription: ${JSON.stringify(swiftConst('aboutDescription'))},\n  contentScope: ${JSON.stringify(swiftConst('contentScope'))},\n  aboutMeTitle: ${JSON.stringify(swiftConst('aboutMeTitle'))},\n  aboutMeDescription: ${JSON.stringify(swiftConst('aboutMeDescription'))},\n  authorLinks: ${JSON.stringify(parseLinks('authorLinks'), null, 2)} satisfies ReferenceLink[],\n  privacyTitle: ${JSON.stringify(swiftConst('privacyTitle'))},\n  privacyPolicy: ${JSON.stringify(swiftConst('privacyPolicy'))},\n  privacyPolicyLink: ${JSON.stringify({ title: privacyLink[1], url: privacyLink[2] }, null, 2)} satisfies ReferenceLink,\n  ${['attackDisclaimerShort', 'attackDisclaimer', 'attackAttribution', 'attackCoverageCaveat', 'attackVersionNote'].map((name) => `${name}: ${JSON.stringify(swiftConst(name))}`).join(',\n  ')},\n  referenceLinks: ${JSON.stringify(referenceLinks, null, 2)} satisfies ReferenceLink[]\n};\n`
 );
 
 console.log(`Generated ${controls.length} controls`);
+
+function enumValues(name) {
+  const body = attackModelSwift.slice(attackModelSwift.indexOf(`enum ${name}:`));
+  return Object.fromEntries([...body.slice(0, body.indexOf('var id:')).matchAll(/case (\w+) = "([^"]+)"/g)].map((match) => [`.${match[1]}`, match[2]]));
+}
+const tactics = enumValues('ATTACKTactic');
+const relationships = enumValues('ATTACKRelationship');
+const techniques = parseSwiftArrayConst(catalogueSwift, 'static let all:').map(({ positional: [id, name, values, url] }) => ({
+  id, name, tactics: values.map((value) => tactics[value.name]), url
+}));
+const stepIds = new Set(controls.flatMap((control) => ['ml1', 'ml2', 'ml3'].flatMap((level) => control[level].steps.map((step) => step.id))));
+const mappings = parseSwiftArrayConst(mappingSwift, 'static let all:').flatMap((call) => {
+  const [swiftId, ids, rels, note] = call.positional;
+  const stepId = iosToWebStepId(swiftId);
+  if (!stepIds.has(stepId)) throw new Error(`ATT&CK step ID does not match web content: ${swiftId} -> ${stepId}`);
+  return (Array.isArray(ids) ? ids : [ids]).map((techniqueId) => ({ stepId, techniqueId, relationships: rels.map((rel) => relationships[rel.name]), ...(note ? { note } : {}) }));
+});
+const version = (name) => catalogueSwift.match(new RegExp(`static let ${name} = "([^"]+)"`))[1];
+await fs.writeFile(out('data/attack.ts'), `// Generated from ATTACKCatalogue.swift, ATTACKMappingData.swift and ATTACKTechnique.swift.
+export type AttackTactic = ${Object.values(tactics).map(JSON.stringify).join(' | ')};
+export const attackTactics: AttackTactic[] = ${JSON.stringify(Object.values(tactics))};
+export type AttackRelationship = ${Object.values(relationships).map(JSON.stringify).join(' | ')};
+export const attackRelationships: AttackRelationship[] = ${JSON.stringify(Object.values(relationships))};
+export interface AttackTechnique { id: string; name: string; tactics: AttackTactic[]; url: string }
+export interface AttackMapping { stepId: string; techniqueId: string; relationships: AttackRelationship[]; note?: string }
+export const attackVersion = ${JSON.stringify(version('attackVersion'))};
+export const attackVersionReleased = ${JSON.stringify(version('attackVersionReleased'))};
+export const attackTechniques: AttackTechnique[] = ${JSON.stringify(techniques, null, 2)};
+export const attackMappings: AttackMapping[] = ${JSON.stringify(mappings, null, 2)};
+`);
+console.log(`Generated ${techniques.length} ATT&CK techniques, ${new Set(mappings.map((mapping) => mapping.stepId)).size} mapped steps`);
