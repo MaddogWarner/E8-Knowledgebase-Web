@@ -23,7 +23,7 @@ All notable changes to this project are documented here. The format is based on
 
 ### Security
 
-- Development-only dependencies updated to close new advisories: `brace-expansion` 1.1.18 → 1.1.21 and 5.0.9 → 5.0.12, `js-yaml` 4.3.1 → 4.3.2, `vitest`/`@vitest/*` 4.1.8 → 4.1.11. None ship in the production image.
+- Development-only dependencies updated to close new advisories: `brace-expansion` 1.1.18 → 1.1.21 and 5.0.9 → 5.0.12, `js-yaml` 4.3.1 → 4.3.2 (#44), `vitest`/`@vitest/mocker` 4.1.8 → 4.1.11 (#43). None ship in the production image.
 
 ## 3.4.2 — 2026-08-29
 
