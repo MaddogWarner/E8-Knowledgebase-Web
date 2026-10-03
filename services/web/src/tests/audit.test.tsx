@@ -102,11 +102,15 @@ describe('profile backup application', () => {
     const { result } = renderHook(useProfiles, { wrapper });
     const oldProfile = result.current.activeProfile;
     const backup = decodeBackup(JSON.stringify({ ...iosV2, globalSettings: {} }));
-    const original = localStorage.setItem.bind(localStorage);
+    // Spy on whichever object in the chain owns setItem: jsdom's Storage
+    // prototype on Node 20, but a different shape on Node 25+.
+    let storageProto: Storage = localStorage;
+    while (!Object.prototype.hasOwnProperty.call(storageProto, 'setItem')) storageProto = Object.getPrototypeOf(storageProto) as Storage;
+    const original = storageProto.setItem;
     let failed = false;
-    const spy = vi.spyOn(localStorage, 'setItem').mockImplementation((key, value) => {
+    const spy = vi.spyOn(storageProto, 'setItem').mockImplementation(function (this: Storage, key: string, value: string) {
       if (!failed && key.endsWith('.auditTrail')) { failed = true; throw new Error('Quota exceeded'); }
-      original(key, value);
+      original.call(this, key, value);
     });
     try {
       expect(() => act(() => result.current.importBackup(backup))).toThrow('Quota exceeded');
