@@ -1,9 +1,12 @@
 /* eslint-disable react-refresh/only-export-components */
+import { isoDate } from './audit';
+import type { ImportedBackup } from './backup';
 import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
 
 export interface Profile {
   id: string;
   name: string;
+  createdAt: string;
 }
 
 interface ProfilesContextValue {
@@ -17,6 +20,7 @@ interface ProfilesContextValue {
   remove: (id: string) => void;
   resetActiveProfile: () => void;
   resetAllAppData: () => void;
+  importBackup: (backup: ImportedBackup) => void;
 }
 
 const profilesKey = 'e8kb.profiles';
@@ -24,7 +28,7 @@ const activeProfileKey = 'e8kb.activeProfile';
 export const profileEvent = 'e8kb.profile.changed';
 export const storageEvent = 'e8kb.localStorage.changed';
 
-const scopedKeyNames = new Set(['stepProgressDict', 'targetMaturity', 'hideComplete', 'licenseMode', 'osScope']);
+export const scopedKeyNames = new Set(['auditTrail', 'stepProgressDict', 'targetMaturity', 'hideComplete', 'licenseMode', 'osScope']);
 const unscopedKeys = ['e8kb.stepProgressDict', 'e8kb.progress', 'e8kb.targetMaturity', 'e8kb.hideComplete', 'e8kb.licenseMode', 'e8kb.osScope'];
 
 const ProfilesContext = createContext<ProfilesContextValue | null>(null);
@@ -61,7 +65,7 @@ function readProfiles(): Profile[] {
   try {
     const parsed: unknown = JSON.parse(window.localStorage.getItem(profilesKey) ?? '[]');
     if (!Array.isArray(parsed)) return [];
-    return parsed.filter(isProfile).map((profile) => ({ id: profile.id, name: normaliseName(profile.name) || 'Default' }));
+    return parsed.filter(isProfile).map((profile) => ({ id: profile.id, name: normaliseName(profile.name) || 'Default', createdAt: typeof profile.createdAt === 'string' && Number.isFinite(Date.parse(profile.createdAt)) ? isoDate(new Date(profile.createdAt)) : isoDate() }));
   } catch {
     return [];
   }
@@ -104,7 +108,7 @@ function initialiseProfiles(): { profiles: Profile[]; activeId: string } {
 
   migrateLegacyProgressDict();
 
-  const defaultProfile = { id: randomId(), name: 'Default' };
+  const defaultProfile = { id: randomId(), name: 'Default', createdAt: isoDate() };
   for (const key of unscopedKeys) {
     const name = keyName(key);
     const value = window.localStorage.getItem(key);
@@ -150,7 +154,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
       create: (name) => {
         const profileName = normaliseName(name);
         if (!profileName) return null;
-        const profile = { id: randomId(), name: profileName };
+        const profile = { id: randomId(), name: profileName, createdAt: isoDate() };
         const nextProfiles = [...profiles, profile];
         writeProfiles(nextProfiles, profile.id);
         setState({ profiles: nextProfiles, activeId: profile.id });
@@ -178,11 +182,55 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
         removeProfileKeys(activeId);
         dispatchProfileChange();
       },
+      importBackup: (backup) => {
+        const saved = new Map(Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index)!).filter((key) => key.startsWith('e8kb.') && key !== 'e8kb.theme').map((key) => [key, localStorage.getItem(key)!]));
+        try {
+          const restoring = backup.globalSettings !== null;
+          const nextProfiles = restoring ? [] : [...profiles];
+          if (restoring) {
+            for (const key of Array.from({ length: window.localStorage.length }, (_, index) => window.localStorage.key(index)!).filter(Boolean)) {
+              if (key.startsWith('e8kb.') && key !== 'e8kb.theme') window.localStorage.removeItem(key);
+            }
+          }
+          const imported = backup.profiles.map((source) => {
+            let name = source.name;
+            if (!restoring && nextProfiles.some((profile) => profile.name === name)) {
+              const base = name.slice(0, 29);
+              name = `${base} (imported)`;
+              let suffix = 2;
+              while (nextProfiles.some((profile) => profile.name === name)) {
+                const ending = ` (imported ${suffix++})`;
+                name = source.name.slice(0, 40 - ending.length) + ending;
+              }
+            }
+            const profile = { id: restoring ? source.id : crypto.randomUUID(), name, createdAt: source.createdAt };
+            nextProfiles.push(profile);
+            const key = (name: string) => scopedStorageKey(profile.id, name);
+            window.localStorage.setItem(key('stepProgressDict'), JSON.stringify(source.stepProgress));
+            window.localStorage.setItem(key('auditTrail'), JSON.stringify(source.auditTrail));
+            window.localStorage.setItem(key('targetMaturity'), source.targetMaturity);
+            window.localStorage.setItem(key('osScope'), source.osScope);
+            window.localStorage.setItem(key('licenseMode'), source.licenseMode);
+            return profile;
+          });
+          if (restoring && backup.globalSettings?.deepAuditEnabled !== undefined) {
+            window.localStorage.setItem('e8kb.deepAudit', String(backup.globalSettings.deepAuditEnabled));
+          }
+          writeProfiles(nextProfiles, imported[0].id);
+          setState({ profiles: nextProfiles, activeId: imported[0].id });
+          dispatchProfileChange();
+        } catch (error) {
+          // A quota/write failure must leave the assessment available for another attempt.
+          for (const key of Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index)!).filter((key) => key.startsWith('e8kb.') && key !== 'e8kb.theme')) localStorage.removeItem(key);
+          for (const [key, value] of saved) localStorage.setItem(key, value);
+          throw error;
+        }
+      },
       resetAllAppData: () => {
-        for (const key of Object.keys(window.localStorage)) {
+        for (const key of Array.from({ length: window.localStorage.length }, (_, index) => window.localStorage.key(index)!).filter(Boolean)) {
           if (key.startsWith('e8kb.') && key !== 'e8kb.theme') window.localStorage.removeItem(key);
         }
-        const profile = { id: randomId(), name: 'Default' };
+        const profile = { id: randomId(), name: 'Default', createdAt: isoDate() };
         writeProfiles([profile], profile.id);
         setState({ profiles: [profile], activeId: profile.id });
         dispatchProfileChange();

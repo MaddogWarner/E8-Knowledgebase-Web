@@ -1,3 +1,4 @@
+import { attackMappings, attackTechniques } from '../data/attack';
 import { auditPolicyEntries } from '../data/auditPolicy';
 import { controls, getLevelContent, maturityLevels } from '../data/controls';
 import type { MaturityLevel, OSScope } from '../types';
@@ -7,6 +8,7 @@ export interface SearchResult {
   title: string;
   context: string;
   path: string;
+  matchedTechniques?: string[];
 }
 
 interface SearchDocument extends SearchResult {
@@ -35,14 +37,21 @@ const documents: SearchDocument[] = controls.flatMap((control) => {
       haystack: `${control.name} ${level} ${content.summary}`.toLowerCase()
     };
 
-    const stepDocs = content.steps.map((step) => ({
-      id: step.id,
-      title: step.title,
-      context: `${control.name} · ${level.toUpperCase()}${step.ismControls.length > 0 ? ` · ${step.ismControls.join(' ')}` : ''}`,
-      path: `/control/${control.id}/${level}#${step.id}`,
-      osScope: step.osScope,
-      haystack: `${control.name} ${level} ${step.title} ${step.description} ${step.ismControls.join(' ')} ${step.technicalDetails.join(' ')}`.toLowerCase()
-    }));
+    const stepDocs = content.steps.map((step) => {
+      const mappings = attackMappings.filter((mapping) => mapping.stepId === step.id);
+      const attackText = mappings.map((mapping) => {
+        const technique = attackTechniques.find((technique) => technique.id === mapping.techniqueId)!;
+        return `${technique.id} ${technique.name} ${mapping.note ?? ''}`;
+      }).join(' ');
+      return {
+        id: step.id,
+        title: step.title,
+        context: `${control.name} · ${level.toUpperCase()}${step.ismControls.length > 0 ? ` · ${step.ismControls.join(' ')}` : ''}`,
+        path: `/control/${control.id}/${level}#${step.id}`,
+        osScope: step.osScope,
+        haystack: `${control.name} ${level} ${step.title} ${step.description} ${step.ismControls.join(' ')} ${step.technicalDetails.join(' ')} ${attackText}`.toLowerCase()
+      };
+    });
 
     return [summaryDoc, ...stepDocs];
   });
@@ -80,6 +89,11 @@ export function search(query: string, scope: OSScope = 'both'): SearchResult[] {
       id: document.id,
       title: document.title,
       context: document.context,
-      path: document.path
+      path: document.path,
+      matchedTechniques: attackMappings.filter((mapping) => mapping.stepId === document.id).flatMap((mapping) => {
+        const technique = attackTechniques.find((technique) => technique.id === mapping.techniqueId)!;
+        const text = `${technique.id} ${technique.name} ${mapping.note ?? ''}`.toLowerCase();
+        return terms.some((term) => text.includes(term)) ? [`${technique.id} — ${technique.name} (${mapping.relationships.join(', ')})`] : [];
+      })
     }));
 }

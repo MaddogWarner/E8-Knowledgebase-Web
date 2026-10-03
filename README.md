@@ -50,20 +50,25 @@ Each control also surfaces an **ML0** baseline ("no controls implemented").
 - Per-control overview, ML0 baseline, and ML1/ML2/ML3 maturity tabs with numbered, copy-able command / GPO / registry blocks.
 - Per-step implementation status: Not Implemented, Implemented or Not Applicable with an optional local reason.
 - Compliance dashboard with a target-scoped progress ring and per-mitigation stacked bars.
-- **Global search** across every control, step, ISM control ID, technical detail and Windows Audit Policy entry.
+- **Global search** across every control, step, ISM control ID, technical detail, Windows Audit Policy entry and ATT&CK technique or mapping note.
 - **Deep-link URLs** per control and maturity level (e.g. `/control/3/ml2`) for bookmarking and sharing.
 - **Print / Save as PDF** for clean runbook output.
 - **Dark mode** toggle (remembered locally).
 - ISM control capsules on mapped implementation steps.
 - Windows Audit Policy reference page with grouped recommendations.
 - Exportable compliance report as CSV, plus printable report output.
+- MITRE ATT&CK® technique chips, detail dialogs and target/scope coverage at `/attack`, using the same evidence-adjusted status as the compliance dashboard.
+- Optional Deep Audit Mode records up to 200 timestamped status changes per step, with local notes; off by default.
+- Backup & Restore exports one or all profiles as iOS schema v2 JSON, imports v1/v2 iOS backups, and confirms before a full restore. Backups are capped at 5 MB and exclude CSV evidence and theme settings.
 - Environment profiles for separate systems or teams; progress, target maturity, hide-completed and M365 licence mode are isolated per profile.
 - Client-side CSV evidence upload for the E8 hardening audit and policy
   compliance checker. Only cleanly mapped E8 rows are used; MDE and audit-policy
   rows are ignored, and host/user/IP/raw CSV data is not persisted.
 - Home-page target maturity selector with an option to hide mitigations already
   complete for the selected target.
-- No accounts, no analytics, no data collection — entirely client-side and offline.
+- No accounts, no analytics, no data sent to the developer — entirely client-side and offline.
+
+MITRE ATT&CK® and ATT&CK® are registered trademarks of The MITRE Corporation.
 
 ## Screenshots
 

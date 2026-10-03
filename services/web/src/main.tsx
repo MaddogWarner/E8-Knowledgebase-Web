@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { createBrowserRouter, RouterProvider } from 'react-router';
 import { App } from './App';
 import './index.css';
+import { AttackPage } from './pages/AttackPage';
 import { AboutPage } from './pages/AboutPage';
 import { AuditPolicyPage } from './pages/AuditPolicyPage';
 import { ControlPage } from './pages/ControlPage';
@@ -20,6 +21,7 @@ const router = createBrowserRouter([
       { path: 'control/:controlId/:level', element: <ControlPage /> },
       { path: 'audit-policy', element: <AuditPolicyPage /> },
       { path: 'm365', element: <M365SettingsPage /> },
+      { path: 'attack', element: <AttackPage /> },
       { path: 'about', element: <AboutPage /> },
       { path: '*', element: <NotFound /> }
     ]

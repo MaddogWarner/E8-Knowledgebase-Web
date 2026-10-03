@@ -1,3 +1,4 @@
+import { stepStateLabels } from '../lib/audit';
 import { Link } from 'react-router';
 import { ComplianceChart } from '../components/ComplianceChart';
 import { ComplianceRing } from '../components/ComplianceRing';
@@ -12,17 +13,11 @@ import { isOSScope, stepsInScope } from '../lib/scope';
 import { compliancePercentage, controlComplete, isStepCompleteOrNotApplicable, isStepDone, levelsUpTo, statusCounts } from '../lib/status';
 import { useLocalStorage } from '../lib/useLocalStorage';
 import { useStepProgress } from '../lib/useStepProgress';
-import type { MaturityLevel, OSScope, StepStateValue } from '../types';
+import type { MaturityLevel, OSScope } from '../types';
 
 function isBooleanString(value: string): value is 'true' | 'false' {
   return value === 'true' || value === 'false';
 }
-
-const printStateLabels: Record<StepStateValue, string> = {
-  implemented: 'Implemented',
-  notApplicable: 'Not applicable',
-  notImplemented: 'Not implemented'
-};
 
 export function HomePage() {
   const [targetMaturity, setTargetMaturity] = useLocalStorage<MaturityLevel>('e8kb.targetMaturity', 'ml1', isMaturityLevel);
@@ -133,6 +128,7 @@ export function HomePage() {
         })}
       </section>
 
+      <Link to="/attack" className="control-card threat-coverage-link"><h2>Threat Coverage</h2><p>MITRE ATT&CK® Coverage</p></Link>
       <section className="print-report-list" aria-label="Printable compliance report">
         <h2>Compliance report</h2>
         {controls.map((control) => (
@@ -141,7 +137,7 @@ export function HomePage() {
             <ul>
               {targetLevels.flatMap((level) => stepsInScope(getLevelContent(control, level).steps, osScope).map((step) => (
                 <li key={step.id}>
-                  <strong>{level.toUpperCase()}:</strong> {step.title} — {printStateLabels[status(step.id).state]}
+                  <strong>{level.toUpperCase()}:</strong> {step.title} — {stepStateLabels[status(step.id).state]}
                 </li>
               )))}
             </ul>
