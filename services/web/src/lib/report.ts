@@ -80,6 +80,7 @@ export function buildReportRows(
 }
 
 function escapeCsv(value: string) {
+  if (/^[=+@\-\t\r]/.test(value)) value = `'${value}`;
   if (/[",\n\r;]/.test(value)) return `"${value.replaceAll('"', '""')}"`;
   return value;
 }

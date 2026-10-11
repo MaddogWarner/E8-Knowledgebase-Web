@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/), and this project adheres to
 [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+### Changed
+
+- Pinned the Trivy action in the container build to a commit SHA.
+
+### Security
+
+- CSV report export neutralises values that spreadsheets would treat as formulas.
+
 ## 3.5.0 — 2026-10-03
 
 ### Added
