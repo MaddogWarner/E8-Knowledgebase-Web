@@ -15,6 +15,10 @@ updates:
       dev-dependencies:
         patterns: ["*"]
         update-types: ["minor", "patch"]
+    # Keep @types/node aligned with the Node major in services/web/Dockerfile; revisit when that changes.
+    ignore:
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: docker
     directory: /
