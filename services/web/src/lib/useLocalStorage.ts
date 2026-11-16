@@ -16,10 +16,15 @@ export function useLocalStorage<T extends string>(key: string, initialValue: T, 
   const [value, setValue] = useState<T>(() => {
     return readValue();
   });
+  const [loadedKey, setLoadedKey] = useState(resolvedKey);
+
+  // Re-read when the profile-scoped key changes (adjusting state during render, not in an effect).
+  if (loadedKey !== resolvedKey) {
+    setLoadedKey(resolvedKey);
+    setValue(readValue());
+  }
 
   useEffect(() => {
-    setValue(readValue());
-
     function refresh() {
       setValue(readValue());
     }

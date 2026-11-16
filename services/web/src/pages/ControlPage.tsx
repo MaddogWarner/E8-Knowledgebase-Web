@@ -1,6 +1,6 @@
 import { techniquesForControl } from '../lib/attack';
 import { Printer } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { createElement, useEffect, useState } from 'react';
 import { Link, Navigate, useLocation, useParams } from 'react-router';
 import { GapNote } from '../components/GapNote';
 import { M365Additions } from '../components/M365Additions';
@@ -31,6 +31,13 @@ export function ControlPage() {
   const { evidence } = useEvidence();
   const { status } = useStepProgress();
   const [activeFilters, setActiveFilters] = useState<StepDisplayState[]>([]);
+  const [filtersForId, setFiltersForId] = useState(controlId);
+
+  // Clear filters when navigating to another control (adjusting state during render, not in an effect).
+  if (filtersForId !== controlId) {
+    setFiltersForId(controlId);
+    setActiveFilters([]);
+  }
 
   useEffect(() => {
     if (location.hash) {
@@ -39,14 +46,9 @@ export function ControlPage() {
     }
   }, [location.hash, activeLevel]);
 
-  useEffect(() => {
-    setActiveFilters([]);
-  }, [id]);
-
   if (!control) return <Navigate to="/not-found" replace />;
   if (level && !isMaturityLevel(level)) return <Navigate to={`/control/${id}/ml1`} replace />;
 
-  const Icon = resolveIcon(control.icon);
   const content = getLevelContent(control, activeLevel);
   const allSteps = stepsInScope(maturityLevels.flatMap(({ id: maturityLevel }) => getLevelContent(control, maturityLevel).steps), osScope);
   const scopedLevelSteps = stepsInScope(content.steps, osScope);
@@ -69,7 +71,7 @@ export function ControlPage() {
     <div className="page-stack">
       <section className="control-hero">
         <div className="hero-icon">
-          <Icon size={34} />
+          {createElement(resolveIcon(control.icon), { size: 34 })}
         </div>
         <div>
           <p className="eyebrow">Mitigation {control.id}</p>

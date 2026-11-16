@@ -79,11 +79,16 @@ export function useStepProgress(): {
     migrateLegacyProgress(dictKey);
     return readProgress(dictKey);
   });
+  const [loadedKey, setLoadedKey] = useState(dictKey);
 
-  useEffect(() => {
+  // Reload when the profile-scoped key changes (adjusting state during render, not in an effect).
+  if (loadedKey !== dictKey) {
+    setLoadedKey(dictKey);
     migrateLegacyProgress(dictKey);
     setProgress(readProgress(dictKey));
+  }
 
+  useEffect(() => {
     function refresh() {
       setProgress(readProgress(dictKey));
     }
