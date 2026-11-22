@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { attackTechniques, type AttackTechnique } from '../data/attack';
 import { mappingsForStep } from '../lib/attack';
 import { readAudit, noteTextMaxLength, stepStateLabels } from '../lib/audit';
@@ -31,6 +31,7 @@ export function StepCard({ step, index }: StepCardProps) {
   const mappings = mappingsForStep(step.id);
   const mapped = attackTechniques.filter((technique) => mappings.some((mapping) => mapping.techniqueId === technique.id));
   const [reason, setReason] = useState(stepStatus.reason ?? '');
+  const [syncedStatus, setSyncedStatus] = useState(stepStatus);
   const state = classifyStep(stepStatus, evidence[step.id]);
   const verification = verificationDetails[step.id] ?? [];
   const statusLabel = state === 'evidenced'
@@ -43,9 +44,11 @@ export function StepCard({ step, index }: StepCardProps) {
           ? 'Not applicable'
           : null;
 
-  useEffect(() => {
+  // Reset the reason draft when the saved status changes (adjusting state during render, not in an effect).
+  if (syncedStatus.state !== stepStatus.state || syncedStatus.reason !== stepStatus.reason) {
+    setSyncedStatus(stepStatus);
     setReason(stepStatus.reason ?? '');
-  }, [stepStatus.reason, stepStatus.state]);
+  }
 
   function requestChange(state: StepStateValue) {
     if (deepAudit === 'true' && state !== stepStatus.state) {
