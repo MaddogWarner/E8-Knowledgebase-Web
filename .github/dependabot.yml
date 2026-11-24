@@ -24,7 +24,7 @@ updates:
         versions: [">=7.0.0"]
 
   - package-ecosystem: docker
-    directory: /
+    directory: /services/web
     schedule:
       interval: weekly
     open-pull-requests-limit: 3
